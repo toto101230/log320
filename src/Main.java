@@ -11,6 +11,8 @@ public class Main {
         }
         System.out.println(rt.RechercheLineaire(new int[]{1, 2, 3, 4, 5}, 5, 5));
         System.out.println(rt.RechercheBinaire(tab, N, N/4+10));
+        int random = (int) (Math.random() * N);
+        System.out.println(rt.RechercheBinaireModifie(tab, N, random) + " r =" + random);
     }
 
 }

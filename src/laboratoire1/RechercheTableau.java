@@ -24,14 +24,34 @@ public class RechercheTableau {
             return mid;
         if (tab[mid] > val) {
             return RechercheBinaire(tab, mid, val);
-        }else {
+        } else {
             int res = RechercheBinaire(Arrays.copyOfRange(tab, mid, n), n - mid, val);
             return res == -1 ? -1 : mid + res;
         }
     }
 
     public int RechercheBinaireModifie(int[] tab, int n, int val) {
-        return -1;
+        if (n == 1)
+            return tab[0] == val ? 0 : -1;
+        int gauche = n / 3;
+        if (tab[gauche] == val)
+            return gauche;
+
+        if (tab[gauche] > val) {
+            return RechercheBinaireModifie(tab, gauche, val);
+        } else {
+            int droite = n / 3 * 2;
+            if (tab[droite] == val)
+                return droite;
+
+            if (tab[droite] > val) {
+                int res = RechercheBinaireModifie(Arrays.copyOfRange(tab, gauche, droite), droite - gauche, val);
+                return res == -1 ? -1 : gauche + res;
+            } else {
+                int res = RechercheBinaireModifie(Arrays.copyOfRange(tab, droite, n), n - droite, val);
+                return res == -1 ? -1 : droite + res;
+            }
+        }
     }
 
 }
