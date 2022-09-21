@@ -27,6 +27,7 @@ public class RechercheTableau {
             }
             return -1;
         }
+
         int middle = firstIndex + n / 2;
         if (tab[middle] == val){
             return middle;
@@ -47,7 +48,7 @@ public class RechercheTableau {
             return -1;
         }
         int gauche = firstIndex + n / 3;
-        int droite = lastIndex - n / 3;
+        int droite = firstIndex + (2 * (n / 3));
         if (tab[gauche] == val){
             return gauche;
         }
@@ -60,7 +61,7 @@ public class RechercheTableau {
         if (tab[droite] < val){
             return HelperBinaireModifie(tab, droite + 1, lastIndex, val);
         }
-        return HelperBinaireModifie(tab, gauche - 1, droite + 1, val);
+        return HelperBinaireModifie(tab, gauche + 1, droite - 1, val);
     }
 
 }
