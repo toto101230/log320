@@ -4,7 +4,7 @@ public class Main {
 
     public static void main(String[] args) {
         RechercheTableauComparaisons searcher = new RechercheTableauComparaisons();
-        int[] tabLongueur = new int[]{10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000}; // Liste des longueurs de tableaux successives
+        int[] tabLongueur = new int[]{10, 51, 100, 501, 1000, 5001, 10000, 50001, 100000, 500001, 1000000, 5000001, 10000000, 50000001, 100000000}; // Liste des longueurs de tableaux successives
         int[][] tabTps = new int[3][tabLongueur.length]; // Tableau de temps
         int[][] tabCmp = new int[3][tabLongueur.length]; // Tableau de comparaisons
         for (int i = 0; i < tabLongueur.length; i++) {
@@ -47,14 +47,19 @@ public class Main {
 
         // Affichage des résultats
         System.out.println("Temps d'éxecution");
-        System.out.println("Algo1\tAlgo2\tAlgo3");
-        for (int i = 0; i < tabLongueur.length; i++) {
-            System.out.println(tabTps[0][i] + "\t" + tabTps[1][i] + "\t" + tabTps[2][i]);
-        }
+        afficheTab(tabLongueur, tabTps);
         System.out.println("\nNombre de comparaisons");
-        System.out.println("Algo1\tAlgo2\tAlgo3");
+        afficheTab(tabLongueur, tabCmp);
+    }
+
+    private static void afficheTab(int[] tabLongueur, int[][] tabCmp) {
+        System.out.println("Algo1\t\tAlgo2\t\tAlgo3");
         for (int i = 0; i < tabLongueur.length; i++) {
-            System.out.println(tabCmp[0][i] + "\t" + tabCmp[1][i] + "\t" + tabCmp[2][i]);
+            System.out.println(tabCmp[0][i] + newtab(tabCmp[0][i]) + "\t" + tabCmp[1][i] + newtab(tabCmp[1][i]) + "\t" + tabCmp[2][i]);
         }
+    }
+
+    private static String newtab(int i) {
+        return (i < 10000000) ? (i < 1000) ? "\t\t" : "\t" : "";
     }
 }
