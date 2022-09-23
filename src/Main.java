@@ -1,15 +1,16 @@
 import laboratoire1.RechercheTableauComparaisons;
 
 public class Main {
-    static int N = 100;
+    static int N = 500;
+
     public static void main(String[] args) {
-        RechercheTableauComparaisons searcher = new RechercheTableauComparaisons();
-        int[] tabLongueur = new int[]{10, 51, 100, 501, 1000, 5001, 10000, 50001, 100000, 500001, 1000000, 5000001, 10000000, 50000001, 100000000}; // Liste des longueurs de tableaux successives
+        int[] tabLongueur = new int[]{10, 51, 100, 501, 1000, 5001, 10000, 50001, 100000, 500001, 1000000, 5000001, 10000000}; //, 50000001, 100000000}; // Liste des longueurs de tableaux successives
         int[][][] tabTps = new int[N][3][tabLongueur.length]; // Tableau de temps
         int[][][] tabCmp = new int[N][3][tabLongueur.length]; // Tableau de comparaisons
-        for(int  j = 0; j < N; j++) {
+        for (int j = 0; j < N; j++) {
 
             for (int i = 0; i < tabLongueur.length; i++) {
+                RechercheTableauComparaisons searcher = new RechercheTableauComparaisons();
                 int longueur = tabLongueur[i]; // Longueur de la liste en cours
                 int[] tab = new int[longueur];
                 for (int k = 0; k < longueur; k++) {
@@ -66,9 +67,9 @@ public class Main {
                 moyenAlgo2 += tabCmp[j][1][i];
                 moyenAlgo3 += tabCmp[j][2][i];
             }
-            moyenAlgo1 =(int)( moyenAlgo1/ N);
-            moyenAlgo2 =(int)( moyenAlgo2/ N);
-            moyenAlgo3 =(int)( moyenAlgo3/ N);
+            moyenAlgo1 = (int) (moyenAlgo1 / N);
+            moyenAlgo2 = (int) (moyenAlgo2 / N);
+            moyenAlgo3 = (int) (moyenAlgo3 / N);
             System.out.println(moyenAlgo1 + newtab(moyenAlgo1) + "\t" + moyenAlgo2 + newtab(moyenAlgo2) + "\t" + moyenAlgo3);
         }
     }
