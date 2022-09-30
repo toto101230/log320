@@ -13,21 +13,21 @@ public class Huffman {
     public void Compresser(String nomFichierEntre, String nomFichierSortie) {
         HashMap<Integer, Integer> tablesFrequence = creerTableFrequences(nomFichierEntre);
         ArrayList<Noeud> arbreHuffman = creerArbreHuffman(tablesFrequence);
-        for(Noeud n : arbreHuffman){
-            System.out.println(n.getValeur() + " " + n.getFrequence());
+        TreeMap<Integer, Integer> tableCodage = creerTableCodage(arbreHuffman);
+        for(int i : tableCodage.keySet()) {
+            System.out.println(i + " : " + tableCodage.get(i));
         }
-        TreeMap<Integer, Byte> tableCodage = creerTableCodage(arbreHuffman);
         compresseFile(nomFichierEntre, nomFichierSortie, tableCodage);
     }
 
-    private void compresseFile(String nomFichierEntre, String nomFichierSortie, TreeMap<Integer, Byte> tableCodage) {
+    private void compresseFile(String nomFichierEntre, String nomFichierSortie, TreeMap<Integer, Integer> tableCodage) {
         File entre = new File(nomFichierEntre);
         File sortie = new File(nomFichierSortie);
         try (FileInputStream fileInputStream = new FileInputStream(entre)) {
             FileOutputStream fos = new FileOutputStream(sortie);
             int singleCharInt;
             while ((singleCharInt = fileInputStream.read()) != -1) {
-                byte val = tableCodage.get(singleCharInt);
+                int val = tableCodage.get(singleCharInt);
                 fos.write(val);
             }
         } catch (Exception e) {
@@ -35,12 +35,12 @@ public class Huffman {
         }
     }
 
-    private TreeMap<Integer, Byte> creerTableCodage(ArrayList<Noeud> arbreHuffman) {
-        TreeMap<Integer, Byte> tableCodage = new TreeMap<>();
+    private TreeMap<Integer, Integer> creerTableCodage(ArrayList<Noeud> arbreHuffman) {
+        TreeMap<Integer, Integer> tableCodage = new TreeMap<>();
         for (Noeud noeud : arbreHuffman) {
-            if (noeud.getValeur() == -1)
+            if (noeud.getValeur() <= -1)
                 continue;
-            byte code = 0;
+            int code = 0;
             byte un = 1;
             ArrayList<Noeud> chemin = new ArrayList<>();
             Noeud noeudCourant = noeud;
@@ -63,45 +63,39 @@ public class Huffman {
 
     private ArrayList<Noeud> creerArbreHuffman(HashMap<Integer, Integer> tablesFrequence) {
         ArrayList<Noeud> arbreHuffman = new ArrayList<>();
+        int i = -1;
         while (tablesFrequence.size() > 1) {
             int key1 = trouverMin(tablesFrequence);
             int frequence1 = tablesFrequence.get(key1);
             tablesFrequence.remove(key1);
+
             int key2 = trouverMin(tablesFrequence);
             int frequence2 = tablesFrequence.get(key2);
             tablesFrequence.remove(key2);
 
             int somme = frequence1 + frequence2;
-            tablesFrequence.put(-1, somme);
+            tablesFrequence.put(i, somme);
 
             Noeud gauche = creationNoeud(arbreHuffman, key1, frequence1);
             Noeud droit = creationNoeud(arbreHuffman, key2, frequence2);
-            Noeud sommeN = new Noeud(-1, somme, gauche, droit);
+            Noeud sommeN = new Noeud(i, somme, gauche, droit);
             arbreHuffman.add(sommeN);
             gauche.setParent(sommeN);
             droit.setParent(sommeN);
+            i--;
         }
         return arbreHuffman;
     }
 
     private Noeud creationNoeud(ArrayList<Noeud> arbreHuffman, int key, int frequence) {
         for (Noeud noeud : arbreHuffman) {
-            if (noeud.getValeur() == key && noeud.getFrequence() == frequence) {
+            if (noeud.getValeur() == key && noeud.getFrequence() == frequence && noeud.getParent() == null) {
                 return noeud;
             }
         }
         Noeud noeud = new Noeud(key, frequence, null, null);
         arbreHuffman.add(noeud);
         return noeud;
-    }
-
-    private Noeud rechercheNoeud(ArrayList<Noeud> arbreHuffman, int key1) {
-        for (Noeud noeud : arbreHuffman) {
-            if (noeud.getValeur() == key1) {
-                return noeud;
-            }
-        }
-        return null;
     }
 
     private int trouverMin(HashMap<Integer, Integer> tablesFrequence) {
