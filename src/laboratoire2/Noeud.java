@@ -53,4 +53,25 @@ public class Noeud {
     public void setParent(Noeud parent) {
         this.parent = parent;
     }
+
+    @Override
+    public String toString() {
+        return "Noeud{" +
+                "valeur=" + valeur +
+                ", frequence=" + frequence +
+                (parent != null ? ", parent=" + parent.getValeur() : "") +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Noeud other = (Noeud) obj;
+        return this.valeur == other.valeur;
+    }
 }
