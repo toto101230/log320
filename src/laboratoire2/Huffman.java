@@ -3,6 +3,7 @@ package laboratoire2;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.*;
 
 public class Huffman {
@@ -11,33 +12,55 @@ public class Huffman {
     public void Compresser(String nomFichierEntre, String nomFichierSortie) {
         HashMap<Integer, Integer> tablesFrequence = creerTableFrequences(nomFichierEntre);
         ArrayList<Noeud> arbreHuffman = creerArbreHuffman(tablesFrequence);
-        TreeMap<Integer, Integer> tableCodage = creerTableCodage(arbreHuffman);
+        TreeMap<Integer, StringBuilder> tableCodage = creerTableCodage(arbreHuffman);
         for (int i : tableCodage.keySet()) {
-            System.out.println(i + " : " + Integer.toBinaryString(tableCodage.get(i)));
+            System.out.println(i + " : " + tableCodage.get(i));
         }
-        compresseFile(nomFichierEntre, nomFichierSortie, tableCodage);
+        afficherDoublon(tableCodage);
+        maxBits(tableCodage);
+        compresseFile(nomFichierEntre, nomFichierSortie, tableCodage, tablesFrequence);
     }
 
-    private void compresseFile(String nomFichierEntre, String nomFichierSortie, TreeMap<Integer, Integer> tableCodage) {
+    private void maxBits(TreeMap<Integer, StringBuilder> tableCodage) {
+        int max = 0;
+        for (int i : tableCodage.keySet()) {
+            if (tableCodage.get(i).length() > max) {
+                max = tableCodage.get(i).length();
+            }
+        }
+        System.out.println("Nombre de bits max : " + max);
+    }
+
+    private void afficherDoublon(TreeMap<Integer, StringBuilder> arbreHuffman) {
+        ArrayList<StringBuilder> doublon = new ArrayList<>();
+        for (int i : arbreHuffman.keySet()) {
+            if (doublon.contains(arbreHuffman.get(i))) {
+                System.out.println("Doublon : " + i + " : " + arbreHuffman.get(i));
+            }
+            doublon.add(arbreHuffman.get(i));
+        }
+    }
+
+    private void compresseFile(String nomFichierEntre, String nomFichierSortie, TreeMap<Integer, StringBuilder> tableCodage, HashMap<Integer, Integer> tablesFrequence) {
         File entre = new File(nomFichierEntre);
         File sortie = new File(nomFichierSortie);
         try (FileInputStream fileInputStream = new FileInputStream(entre);
              FileOutputStream fileOutputStream = new FileOutputStream(sortie)) {
-            fileOutputStream.write(tableCodage.size());
-            fileOutputStream.write(0);
-            for (int i : tableCodage.keySet()) {
+//            fileOutputStream.write(tablesFrequence.size());
+//            fileOutputStream.write(0);
+            for (int i : tablesFrequence.keySet()) {
                 fileOutputStream.write(i);
-                fileOutputStream.write(tableCodage.get(i));
+                fileOutputStream.write(tablesFrequence.get(i));
             }
 
             int b;
             byte bitBuffer = 0;
             int bitCount = 0;
             while ((b = fileInputStream.read()) != -1) {
-                int code = tableCodage.get(b);
-                int codeLength = Integer.toBinaryString(code).length();
+                StringBuilder code = tableCodage.get(b);
+                int codeLength = code.length();
                 for (int i = codeLength - 1; i >= 0; i--) {
-                    bitBuffer = (byte) ((bitBuffer << 1) | (code >> i & 1));
+                    bitBuffer = (byte) ((bitBuffer << 1) | getCharDeCode(code.charAt(i)));
                     bitCount++;
                     if (bitCount == 8) {
                         fileOutputStream.write(bitBuffer);
@@ -61,13 +84,32 @@ public class Huffman {
         }
     }
 
-    private TreeMap<Integer, Integer> creerTableCodage(ArrayList<Noeud> arbreHuffman) {
-        TreeMap<Integer, Integer> tableCodage = new TreeMap<>();
+    private int getCharDeCode(char charAt) {
+        if (charAt == '0') {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    private void writeString(StringBuilder stringBuilder, FileOutputStream fileOutputStream) throws IOException {
+        for(int i = 0; i < stringBuilder.length(); i += 8) {
+            int b = 0;
+            for(int j = 0; j < 8; j++) {
+                if(i + j < stringBuilder.length()) {
+                    b = (b << 1) | (stringBuilder.charAt(i + j) - '0');
+                }
+            }
+            fileOutputStream.write(b);
+        }
+    }
+
+    private TreeMap<Integer, StringBuilder> creerTableCodage(ArrayList<Noeud> arbreHuffman) {
+        TreeMap<Integer, StringBuilder> tableCodage = new TreeMap<>();
         for (Noeud noeud : arbreHuffman) {
             if (noeud.getValeur() <= -1)
                 continue;
-            int code = 0;
-            byte un = 1;
+            StringBuilder code = new StringBuilder();
             ArrayList<Noeud> chemin = new ArrayList<>();
             Noeud noeudCourant = noeud;
             while (noeudCourant.getParent() != null) {
@@ -77,10 +119,11 @@ public class Huffman {
             chemin.add(noeudCourant);
             for (int i = chemin.size() - 2; i >= 0; i--) {
                 if (chemin.get(i + 1).getGauche() == chemin.get(i)) {
-                    code = (byte) (code + un);
+                    code.append("1");
                 }
-                if (chemin.get(i) != noeud)
-                    code = (byte) (code << 1);
+                else {
+                    code.append("0");
+                }
             }
             tableCodage.put(noeud.getValeur(), code);
         }
@@ -226,7 +269,7 @@ public class Huffman {
     private void completionArbreHuffman(ArrayList<Noeud> arbreHuffman) {
         ArrayList<Noeud> noeuds = (ArrayList<Noeud>) arbreHuffman.clone();
 
-        Noeud droite = getNoeud(noeuds, (byte) 0);
+        Noeud droite = getNoeud(noeuds);
         Noeud racine = new Noeud(-1, -1, null, droite);
         droite.setParent(racine);
         noeuds.remove(droite);
@@ -238,7 +281,7 @@ public class Huffman {
         if (noeuds.size() <= 1) {
             return noeuds.get(0);
         }
-        Noeud droit = getNoeud(noeuds, (byte) (i << 1));
+        Noeud droit = getNoeud(noeuds);
         Noeud noeud = new Noeud(-1, -1, null, droit);
         noeuds.remove(droit);
         droit.setParent(noeud);
@@ -248,13 +291,16 @@ public class Huffman {
         return noeud;
     }
 
-    private Noeud getNoeud(ArrayList<Noeud> noeuds, byte i) {
-        for (Noeud noeud : noeuds) {
-            if (noeud.getFrequence() == i) {
-                return noeud;
+    private Noeud getNoeud(ArrayList<Noeud> noeuds) {
+        int min = Integer.MAX_VALUE;
+        Noeud noeud = null;
+        for (Noeud noeud1 : noeuds) {
+            if (noeud1.getFrequence() < min) {
+                min = noeud1.getFrequence();
+                noeud = noeud1;
             }
         }
-        return null;
+        return noeud;
     }
 
     private ArrayList<Noeud> recreerArbreHuffman(String nomFichierEntre) {
