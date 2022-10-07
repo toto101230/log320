@@ -248,10 +248,9 @@ public class Huffman {
     private Integer getValueTab(byte[] valueTab) {
         System.out.println(valueTab[0] + " " + valueTab[1] + " " + valueTab[2] + " " + valueTab[3]);
         int value = 0;
-        value += valueTab[0] << 24;
-        value += valueTab[1] << 16;
-        value += valueTab[2] << 8;
-        value += valueTab[3];
+        for (int i = 0; i < valueTab.length; i++) {
+            value += (valueTab[i] & 0xFF) << (8 * (3-i));
+        }
         return value;
     }
 
@@ -259,6 +258,7 @@ public class Huffman {
         File file = new File(nomFichierEntre);
         File file2 = new File(nomFichierSortie);
         Noeud racine = arbreHuffman.get(arbreHuffman.size() - 1);
+        int nbCaractere = racine.getFrequence();
         try (FileInputStream fileInputStream = new FileInputStream(file);
              FileOutputStream fileOutputStream = new FileOutputStream(file2)) {
             //skip entete
@@ -272,13 +272,14 @@ public class Huffman {
             int bitCount = 0;
             Noeud noeudCourant = racine;
             int singleCharInt;
-            while ((singleCharInt = fileInputStream.read()) != -1) {
+            while ((singleCharInt = fileInputStream.read()) != -1 && nbCaractere > 0) {
                 bitBuffer = (bitBuffer << 8) | singleCharInt;
                 bitCount += 8;
                 while (bitCount >= 8) {
                     if (noeudCourant.getGauche() == null && noeudCourant.getDroit() == null) {
                         fileOutputStream.write(noeudCourant.getValeur());
                         noeudCourant = racine;
+                        nbCaractere--;
                     }
                     int bit = (bitBuffer >> (bitCount - 1)) & 1;
                     bitCount--;
@@ -289,10 +290,11 @@ public class Huffman {
                     }
                 }
             }
-            while (bitCount > 0) {
+            while (bitCount > 0 && nbCaractere > 0) {
                 if (noeudCourant.getGauche() == null && noeudCourant.getDroit() == null) {
                     fileOutputStream.write(noeudCourant.getValeur());
                     noeudCourant = racine;
+                    nbCaractere--;
                 }
                 int bit = (bitBuffer >> (bitCount - 1)) & 1;
                 bitCount--;

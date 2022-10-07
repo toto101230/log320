@@ -12,4 +12,9 @@ public class Main2 {
 //        huffman.Compresser("src/laboratoire2/test.txt", "src/laboratoire2/test2.txt");
 //        huffman.Decompresser("src/laboratoire2/test2.txt", "src/laboratoire2/testD.txt");
 //    }
+
+//    public static void main(String[] args) {
+//        byte b = -128;
+//        System.out.println(b&0xFF);
+//    }
 }
