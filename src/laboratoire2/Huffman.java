@@ -11,24 +11,17 @@ public class Huffman {
     // Ne pas changer ces fonctions, elles seront utilisées pour tester votre programme
     public void Compresser(String nomFichierEntre, String nomFichierSortie) {
         HashMap<Integer, Integer> tablesFrequence = creerTableFrequences(nomFichierEntre);
+        for(Map.Entry<Integer, Integer> entry : tablesFrequence.entrySet()) {
+            System.out.println(entry.getKey() + " " + entry.getValue());
+        }
+        HashMap<Integer, Integer> tablesFrequenceSave = (HashMap<Integer, Integer>) tablesFrequence.clone();
         ArrayList<Noeud> arbreHuffman = creerArbreHuffman(tablesFrequence);
         TreeMap<Integer, StringBuilder> tableCodage = creerTableCodage(arbreHuffman);
         for (int i : tableCodage.keySet()) {
             System.out.println(i + " : " + tableCodage.get(i));
         }
         afficherDoublon(tableCodage);
-        maxBits(tableCodage);
-        compresseFile(nomFichierEntre, nomFichierSortie, tableCodage, tablesFrequence);
-    }
-
-    private void maxBits(TreeMap<Integer, StringBuilder> tableCodage) {
-        int max = 0;
-        for (int i : tableCodage.keySet()) {
-            if (tableCodage.get(i).length() > max) {
-                max = tableCodage.get(i).length();
-            }
-        }
-        System.out.println("Nombre de bits max : " + max);
+        compresseFile(nomFichierEntre, nomFichierSortie, tableCodage, tablesFrequenceSave);
     }
 
     private void afficherDoublon(TreeMap<Integer, StringBuilder> arbreHuffman) {
@@ -46,11 +39,10 @@ public class Huffman {
         File sortie = new File(nomFichierSortie);
         try (FileInputStream fileInputStream = new FileInputStream(entre);
              FileOutputStream fileOutputStream = new FileOutputStream(sortie)) {
-//            fileOutputStream.write(tablesFrequence.size());
-//            fileOutputStream.write(0);
+            fileOutputStream.write(sizeTable(tablesFrequence));
             for (int i : tablesFrequence.keySet()) {
                 fileOutputStream.write(i);
-                fileOutputStream.write(tablesFrequence.get(i));
+                fileOutputStream.write(eciture8f(tablesFrequence.get(i)));
             }
 
             int b;
@@ -59,7 +51,7 @@ public class Huffman {
             while ((b = fileInputStream.read()) != -1) {
                 StringBuilder code = tableCodage.get(b);
                 int codeLength = code.length();
-                for (int i = codeLength - 1; i >= 0; i--) {
+                for (int i = 0; i < codeLength; i++) {
                     bitBuffer = (byte) ((bitBuffer << 1) | getCharDeCode(code.charAt(i)));
                     bitCount++;
                     if (bitCount == 8) {
@@ -82,6 +74,28 @@ public class Huffman {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private byte[] eciture8f(int integer) {
+        byte[] bytes = new byte[4];
+        bytes[0] = (byte) (integer >> 24);
+        bytes[1] = (byte) (integer >> 16);
+        bytes[2] = (byte) (integer >> 8);
+        bytes[3] = (byte) (integer);
+        return bytes;
+    }
+
+    private byte[] sizeTable(HashMap<Integer, Integer> tablesFrequence) {
+        int size = 0;
+        for (int i : tablesFrequence.keySet()) {
+            if (i != 0) {
+                size++;
+            }
+        }
+        byte[] sizeTable = new byte[2];
+        sizeTable[0] = (byte) (size >> 8);
+        sizeTable[1] = (byte) (size);
+        return sizeTable;
     }
 
     private int getCharDeCode(char charAt) {
@@ -205,12 +219,40 @@ public class Huffman {
     }
 
     public void Decompresser(String nomFichierEntre, String nomFichierSortie) {
-        ArrayList<Noeud> arbreHuffman = recreerArbreHuffman(nomFichierEntre);
-        completionArbreHuffman(arbreHuffman);
+        HashMap<Integer, Integer> tablesFrequence = creerTableFrequencesRecu(nomFichierEntre);
+        ArrayList<Noeud> arbreHuffman = creerArbreHuffman(tablesFrequence);
         for (Noeud noeud : arbreHuffman) {
             System.out.println(noeud);
         }
         decompresFile(nomFichierEntre, nomFichierSortie, arbreHuffman);
+    }
+
+    private HashMap<Integer, Integer> creerTableFrequencesRecu(String nomFichierEntre) {
+        HashMap<Integer, Integer> tablesFrequence = new HashMap<>();
+        File file = new File(nomFichierEntre);
+        int taile = 0;
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+            int taille = fileInputStream.readNBytes(2)[1];
+            for (int i = 0; i < taille; i++) {
+                int key = fileInputStream.read();
+                byte[] valueTab = fileInputStream.readNBytes(4);
+                tablesFrequence.put(key, getValueTab(valueTab));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Taille du fichier : " + taile);
+        return tablesFrequence;
+    }
+
+    private Integer getValueTab(byte[] valueTab) {
+        System.out.println(valueTab[0] + " " + valueTab[1] + " " + valueTab[2] + " " + valueTab[3]);
+        int value = 0;
+        value += valueTab[0] << 24;
+        value += valueTab[1] << 16;
+        value += valueTab[2] << 8;
+        value += valueTab[3];
+        return value;
     }
 
     private void decompresFile(String nomFichierEntre, String nomFichierSortie, ArrayList<Noeud> arbreHuffman) {
@@ -220,9 +262,9 @@ public class Huffman {
         try (FileInputStream fileInputStream = new FileInputStream(file);
              FileOutputStream fileOutputStream = new FileOutputStream(file2)) {
             //skip entete
-            int taille = fileInputStream.read();
-            fileInputStream.read();
-            for (int i = 0; i < taille * 2; i++) {
+            int taille = fileInputStream.readNBytes(2)[1];
+            System.out.println("Taille de l'entete : " + taille);
+            for (int i = 0; i < taille * 5; i++) {
                 fileInputStream.read();
             }
 
@@ -265,60 +307,4 @@ public class Huffman {
         }
 
     }
-
-    private void completionArbreHuffman(ArrayList<Noeud> arbreHuffman) {
-        ArrayList<Noeud> noeuds = (ArrayList<Noeud>) arbreHuffman.clone();
-
-        Noeud droite = getNoeud(noeuds);
-        Noeud racine = new Noeud(-1, -1, null, droite);
-        droite.setParent(racine);
-        noeuds.remove(droite);
-        racine.setGauche(recuFindNoeud(noeuds, (byte) 1, arbreHuffman));
-        arbreHuffman.add(racine);
-    }
-
-    private Noeud recuFindNoeud(ArrayList<Noeud> noeuds, byte i, ArrayList<Noeud> arbreHuffman) {
-        if (noeuds.size() <= 1) {
-            return noeuds.get(0);
-        }
-        Noeud droit = getNoeud(noeuds);
-        Noeud noeud = new Noeud(-1, -1, null, droit);
-        noeuds.remove(droit);
-        droit.setParent(noeud);
-        Noeud gauche = recuFindNoeud(noeuds, (byte) ((i << 1) + 1), arbreHuffman);
-        noeud.setGauche(gauche);
-        arbreHuffman.add(noeud);
-        return noeud;
-    }
-
-    private Noeud getNoeud(ArrayList<Noeud> noeuds) {
-        int min = Integer.MAX_VALUE;
-        Noeud noeud = null;
-        for (Noeud noeud1 : noeuds) {
-            if (noeud1.getFrequence() < min) {
-                min = noeud1.getFrequence();
-                noeud = noeud1;
-            }
-        }
-        return noeud;
-    }
-
-    private ArrayList<Noeud> recreerArbreHuffman(String nomFichierEntre) {
-        ArrayList<Noeud> arbreHuffman = new ArrayList<>();
-        File file = new File(nomFichierEntre);
-        try (FileInputStream fileInputStream = new FileInputStream(file)) {
-            int taille = fileInputStream.read();
-            fileInputStream.skip(1);
-            for (int i = 0; i < taille; i++) {
-                int valeur = fileInputStream.read();
-                int frequence = fileInputStream.read();
-                Noeud noeud = new Noeud(valeur, frequence, null, null);
-                arbreHuffman.add(noeud);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return arbreHuffman;
-    }
-
 }
