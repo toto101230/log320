@@ -36,12 +36,11 @@ public class Huffman {
                 fileOutputStream.write(eciture8f(tablesFrequence.get(i)));
             }
 
-            int b;
             byte bitBuffer = 0;
-            int bitCount = 0;
+            int b, bitCount = 0, codeLength;
             while ((b = fileInputStream.read()) != -1) {
                 StringBuilder code = tableCodage.get(b);
-                int codeLength = code.length();
+                codeLength = code.length();
                 for (int i = 0; i < codeLength; i++) {
                     bitBuffer = (byte) ((bitBuffer << 1) | getCharDeCode(code.charAt(i)));
                     bitCount++;
@@ -225,7 +224,6 @@ public class Huffman {
     }
 
     private Integer getValueTab(byte[] valueTab) {
-        System.out.println(valueTab[0] + " " + valueTab[1] + " " + valueTab[2] + " " + valueTab[3]);
         int value = 0;
         for (int i = 0; i < valueTab.length; i++) {
             value += (valueTab[i] & 0xFF) << (8 * (3 - i));
@@ -241,7 +239,7 @@ public class Huffman {
         try (FileInputStream fileInputStream = new FileInputStream(file);
              FileOutputStream fileOutputStream = new FileOutputStream(file2)) {
             //skip entete
-            int taille = fileInputStream.readNBytes(2)[1];
+            int taille = fileInputStream.readNBytes(2)[1] & 0xFF;
             System.out.println("Taille de l'entete : " + taille);
             for (int i = 0; i < taille * 5; i++) {
                 fileInputStream.read();
@@ -283,6 +281,12 @@ public class Huffman {
                     noeudCourant = noeudCourant.getDroit();
                 }
             }
+            if (noeudCourant != null && nbCaractere > 0)
+                if (noeudCourant.getGauche() == null && noeudCourant.getDroit() == null) {
+                    fileOutputStream.write(noeudCourant.getValeur());
+                    nbCaractere--;
+                }
+            System.out.println(nbCaractere);
         } catch (Exception e) {
             e.printStackTrace();
         }
