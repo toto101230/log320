@@ -12,16 +12,10 @@ public class Huffman {
             System.out.println("Erreur lors de la lecture du fichier");
             return;
         }
-        for (Map.Entry<Integer, Integer> entry : tablesFrequence.entrySet()) {
-            System.out.println(entry.getKey() + " " + entry.getValue());
-        }
         HashMap<Integer, Integer> tablesFrequenceSave = (HashMap<Integer, Integer>) tablesFrequence.clone();
 
         ArrayList<Noeud> arbreHuffman = creerArbreHuffman(tablesFrequence);
         HashMap<Integer, StringBuilder> tableCodage = creerTableCodage(arbreHuffman);
-        for (int i : tableCodage.keySet()) {
-            System.out.println(i + " : " + tableCodage.get(i));
-        }
         compresseFile(nomFichierEntre, nomFichierSortie, tableCodage, tablesFrequenceSave);
     }
 
@@ -188,7 +182,6 @@ public class Huffman {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Taille du fichier : " + taile);
         return tablesFrequence;
     }
 
@@ -199,9 +192,6 @@ public class Huffman {
             return;
         }
         ArrayList<Noeud> arbreHuffman = creerArbreHuffman(tablesFrequence);
-        for (Noeud noeud : arbreHuffman) {
-            System.out.println(noeud);
-        }
         decompresFile(nomFichierEntre, nomFichierSortie, arbreHuffman);
     }
 
@@ -219,7 +209,6 @@ public class Huffman {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Taille du fichier : " + taile);
         return tablesFrequence;
     }
 
@@ -240,7 +229,6 @@ public class Huffman {
              FileOutputStream fileOutputStream = new FileOutputStream(file2)) {
             //skip entete
             int taille = fileInputStream.readNBytes(2)[1] & 0xFF;
-            System.out.println("Taille de l'entete : " + taille);
             for (int i = 0; i < taille * 5; i++) {
                 fileInputStream.read();
             }
@@ -286,7 +274,6 @@ public class Huffman {
                     fileOutputStream.write(noeudCourant.getValeur());
                     nbCaractere--;
                 }
-            System.out.println(nbCaractere);
         } catch (Exception e) {
             e.printStackTrace();
         }
