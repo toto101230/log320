@@ -168,7 +168,6 @@ public class Huffman {
     private HashMap<Integer, Integer> creerTableFrequences(String nomFichierEntre) {
         HashMap<Integer, Integer> tablesFrequence = new HashMap<>();
         File file = new File(nomFichierEntre);
-        int taile = 0;
         try (FileInputStream fileInputStream = new FileInputStream(file)) {
             int singleCharInt;
             while ((singleCharInt = fileInputStream.read()) != -1) {
@@ -177,7 +176,6 @@ public class Huffman {
                 } else {
                     tablesFrequence.put(singleCharInt, 1);
                 }
-                taile++;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -198,9 +196,8 @@ public class Huffman {
     private HashMap<Integer, Integer> recupTablesFrequence(String nomFichierEntre) {
         HashMap<Integer, Integer> tablesFrequence = new HashMap<>();
         File file = new File(nomFichierEntre);
-        int taile = 0;
         try (FileInputStream fileInputStream = new FileInputStream(file)) {
-            int taille = fileInputStream.readNBytes(2)[1];
+            int taille = fileInputStream.readNBytes(2)[1] & 0xFF;
             for (int i = 0; i < taille; i++) {
                 int key = fileInputStream.read();
                 byte[] valueTab = fileInputStream.readNBytes(4);
@@ -270,10 +267,9 @@ public class Huffman {
                 }
             }
             if (noeudCourant != null && nbCaractere > 0)
-                if (noeudCourant.getGauche() == null && noeudCourant.getDroit() == null) {
+                if (noeudCourant.getGauche() == null && noeudCourant.getDroit() == null)
                     fileOutputStream.write(noeudCourant.getValeur());
-                    nbCaractere--;
-                }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
