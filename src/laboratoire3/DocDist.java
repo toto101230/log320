@@ -19,13 +19,13 @@ public class DocDist {
 
         double distance = Math.acos(produitScalaire / (norme1 * norme2));
         distance = Math.round(distance * 1000.0) / 1000.0;
-        return (Double.isNaN(distance))?0:distance;
+        return (Double.isNaN(distance)) ? 0 : distance;
     }
 
-    private float calculerNorme(HashMap<String, Integer> listMots1) {
+    private float calculerNorme(HashMap<String, Integer> listMots) {
         float norme = 0;
-        for (String mot : listMots1.keySet()) {
-            norme += Math.pow(listMots1.get(mot), 2);
+        for (String mot : listMots.keySet()) {
+            norme += Math.pow(listMots.get(mot), 2);
         }
         return (float) Math.sqrt(norme);
     }
@@ -49,7 +49,7 @@ public class DocDist {
                 String line = scanner.nextLine();
                 String[] mots = line.toLowerCase().split("[^a-z0-9œàáâãäåæçèéêëìíîïðòóôõöùúûüýÿ]");
                 for (String mot : mots) {
-                    if(!mot.isEmpty()) {
+                    if (!mot.isEmpty()) {
                         motCount++;
                         if (listMots.containsKey(mot)) {
                             listMots.put(mot, listMots.get(mot) + 1);
@@ -69,7 +69,6 @@ public class DocDist {
     }
 
 
-
     private HashMap<String, Integer> lireFichier2(String nomFichier, HashMap<String, Integer> listMots1) {
         int motCount = 0;
         int motDistinctCount = 0;
@@ -81,10 +80,10 @@ public class DocDist {
                 String line = scanner.nextLine();
                 String[] mots = line.toLowerCase().split("[^a-z0-9œàáâãäåæçèéêëìíîïðòóôõöùúûüýÿ]");
                 for (String mot : mots) {
-                    if(!mot.isEmpty()) {
+                    if (!mot.isEmpty()) {
                         motCount++;
                         if (listMots.containsKey(mot)) {
-                            if(listMots.get(mot) == 0) {
+                            if (listMots.get(mot) == 0) {
                                 motDistinctCount++;
                             }
                             listMots.put(mot, listMots.get(mot) + 1);

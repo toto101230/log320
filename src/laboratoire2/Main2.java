@@ -1,3 +1,5 @@
+package laboratoire2;
+
 import laboratoire2.Comparateur;
 import laboratoire2.Huffman;
 
