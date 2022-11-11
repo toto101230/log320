@@ -213,6 +213,46 @@ class Client {
         return coups;
     }
 
+    public int evaluation(int[][] board){
+        int boardlocal[][] = new int[8][8];
+
+        ArrayList<int[]>pieces = new ArrayList<>();
+
+        for(int i=0;i<board.length;i++){
+            for(int j=0;j<board[i].length;j++){
+                pieces.add(new int[]{i,j});
+            }
+        }
+
+
+
+
+        for(int i=0; 1<board.length;i++){
+            for(int j=0;j<board[i].length;j++){
+
+            }
+        }
+        return eval;
+    }
+
+    public double distancepiece(ArrayList<int[]> pieces){
+        double somme = 0;
+        double x;
+        double y;
+        for(int i=0;i<pieces.size();i++){
+            for(int j=0; j<i;j++){
+                somme = calculdistance(pieces.get(i),pieces.get(j));
+            }
+        }
+        return somme;
+    }
+
+    public double calculdistance(int[] p1,int[] p2){
+        int x = (int) Math.pow(p1[0]-p2[0],2);
+        int y = (int) Math.pow(p1[1]-p2[1],2);
+        return Math.sqrt(x+y);
+    }
+
     private static ArrayList<String> generateCoup(int[][] board, int j, int i, int k, int nbPiece) {
         ArrayList<String> coups = new ArrayList<>();
         boolean isPossible = true;
