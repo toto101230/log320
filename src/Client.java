@@ -22,7 +22,7 @@ class Client {
             input = new BufferedInputStream(myClient.getInputStream());
             output = new BufferedOutputStream(myClient.getOutputStream());
             BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
-            while (1 == 1) {
+            while (true) {
                 char cmd = 0;
 
                 cmd = (char) input.read();
@@ -93,13 +93,6 @@ class Client {
                     String s = new String(aBuffer);
                     System.out.println("Dernier coup :" + s);
                     majPlateau(board, s);
-
-                    for (int i = 0; i < 8; i++) {
-                        for (int j = 0; j < 8; j++) {
-                            System.out.print(board[j][i] + " ");
-                        }
-                        System.out.println();
-                    }
 
                     System.out.println("Entrez votre coup : ");
                     String move = null;
@@ -208,7 +201,7 @@ class Client {
         ArrayList<String> coups = new ArrayList<>();
         for (int k = 0; k < 8; k++) {
             int nbPiece = calculeNbPieces(board, j, i, k);
-            coups.addAll(generateCoup(board, j, 7-i, k, nbPiece));
+            coups.addAll(generateCoup(board, j, 7 - i, k, nbPiece));
         }
         return coups;
     }
@@ -216,6 +209,7 @@ class Client {
     private static ArrayList<String> generateCoup(int[][] board, int j, int i, int k, int nbPiece) {
         ArrayList<String> coups = new ArrayList<>();
         boolean isPossible = true;
+        //todo verifier d'abord si la position d'arrivé est possible
         switch (k) {
             case 0://OUEST
                 for (int l = 1; l <= nbPiece; l++) {
@@ -233,10 +227,10 @@ class Client {
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8-i) + "-" + alpha.charAt(j - nbPiece) + "" + (8-i));
+                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j - nbPiece) + "" + (8 - i));
                 }
                 break;
-            case 4 : //EST
+            case 4: //EST
                 for (int l = 1; l <= nbPiece; l++) {
                     if (j + l > 7) {
                         isPossible = false;
@@ -252,10 +246,10 @@ class Client {
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8-i) + "-" + alpha.charAt(j + nbPiece) + "" + (8-i));
+                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j + nbPiece) + "" + (8 - i));
                 }
                 break;
-            case 1 : //SUD
+            case 1: //SUD
                 for (int l = 1; l <= nbPiece; l++) {
                     if (i + l > 7) {
                         isPossible = false;
@@ -271,10 +265,10 @@ class Client {
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8-i) + "-" + alpha.charAt(j) + "" + (8-i - nbPiece));
+                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j) + "" + (8 - i - nbPiece));
                 }
                 break;
-            case 5 : //NORD
+            case 5: //NORD
                 for (int l = 1; l <= nbPiece; l++) {
                     if (i - l < 0) {
                         isPossible = false;
@@ -290,7 +284,83 @@ class Client {
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8-i) + "-" + alpha.charAt(j) + "" + (8-i + nbPiece));
+                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j) + "" + (8 - i + nbPiece));
+                }
+                break;
+            case 2: //SUD-OUEST
+                for (int l = 1; l <= nbPiece; l++) {
+                    if (i + l > 7 || j - l < 0) {
+                        isPossible = false;
+                        break;
+                    }
+                    if (l < nbPiece && board[j - l][i + l] != 0 && board[j - l][i + l] != numJoueur) {
+                        isPossible = false;
+                        break;
+                    }
+                    if (l == nbPiece && board[j - l][i + l] == numJoueur) {
+                        isPossible = false;
+                        break;
+                    }
+                }
+                if (isPossible) {
+                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j - nbPiece) + "" + (8 - i - nbPiece));
+                }
+                break;
+            case 6: //NORD-EST
+                for (int l = 1; l <= nbPiece; l++) {
+                    if (i - l < 0 || j + l > 7) {
+                        isPossible = false;
+                        break;
+                    }
+                    if (l < nbPiece && board[j + l][i - l] != 0 && board[j + l][i - l] != numJoueur) {
+                        isPossible = false;
+                        break;
+                    }
+                    if (l == nbPiece && board[j + l][i - l] == numJoueur) {
+                        isPossible = false;
+                        break;
+                    }
+                }
+                if (isPossible) {
+                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j + nbPiece) + "" + (8 - i + nbPiece));
+                }
+                break;
+            case 3: //NORD-OUEST
+                for (int l = 1; l <= nbPiece; l++) {
+                    if (i - l < 0 || j - l < 0) {
+                        isPossible = false;
+                        break;
+                    }
+                    if (l < nbPiece && board[j - l][i - l] != 0 && board[j - l][i - l] != numJoueur) {
+                        isPossible = false;
+                        break;
+                    }
+                    if (l == nbPiece && board[j - l][i - l] == numJoueur) {
+                        isPossible = false;
+                        break;
+                    }
+                }
+                if (isPossible) {
+                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j - nbPiece) + "" + (8 - i + nbPiece));
+                }
+                break;
+            case 7: //SUD-EST
+                for (int l = 1; l <= nbPiece; l++) {
+                    if (i + l > 7 || j + l > 7) {
+                        isPossible = false;
+                        break;
+                    }
+                    if (l < nbPiece && board[j + l][i + l] != 0 && board[j + l][i + l] != numJoueur) {
+                        isPossible = false;
+                        break;
+                    }
+                    if (l == nbPiece && board[j + l][i + l] == numJoueur) {
+                        isPossible = false;
+                        break;
+                    }
+                }
+                if (isPossible) {
+                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j + nbPiece) + "" + (8 - i - nbPiece));
                 }
                 break;
 
@@ -299,14 +369,13 @@ class Client {
     }
 
     private static int calculeNbPieces(int[][] board, int j, int i, int k) {
-        int nbPiece = 0;
+        int nbPiece = 0, x, y;
         switch (k) {
             case 0:
             case 4:
                 for (int l = 0; l < 8; l++) {
                     if (board[l][7 - i] != 0) {
                         nbPiece++;
-//                        System.out.println("nbPiece : " + board[l][i] + " l : " + l + " i : " + i);
                     }
                 }
                 break;
@@ -318,25 +387,60 @@ class Client {
                     }
                 }
                 break;
-//            case 2:
-//            case 6:
-//                for (int l = 0; l < 8; l++) {
-//                    if (board[i][i] != 0) {
-//                        nbPiece++;
-//                    }
-//                }
-//                break;
-//            case 3:
-//            case 7:
-//                for (int l = 0; l < 8; l++) {
-//                    if (board[i][7 - i] != 0) {
-//                        nbPiece++;
-//                    }
-//                }
-//                break;
+            case 2:
+            case 6:
+                x = j;
+                y = i;
+                while (x >= 0 && y >= 0) {
+                    if (board[x][7 - y] != 0) {
+                        nbPiece++;
+                    }
+                    x--;
+                    y--;
+                }
+                x = j + 1;
+                y = i + 1;
+                while (x < 8 && y < 8) {
+                    if (board[x][7 - y] != 0) {
+                        nbPiece++;
+                    }
+                    x++;
+                    y++;
+                }
+                break;
+
+            case 3:
+            case 7:
+                x = j;
+                y = i;
+                while (x < 8 && y >= 0) {
+                    if (board[x][7 - y] != 0) {
+                        nbPiece++;
+                    }
+                    x++;
+                    y--;
+                }
+                x = j - 1;
+                y = i + 1;
+                while (x >= 0 && y < 8) {
+                    if (board[x][7 - y] != 0) {
+                        nbPiece++;
+                    }
+                    x--;
+                    y++;
+                }
+                break;
         }
         return nbPiece;
     }
 
+    public static void afficherBoard(int[][] board) {
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                System.out.print(board[j][i] + " ");
+            }
+            System.out.println();
+        }
+    }
 
 }
