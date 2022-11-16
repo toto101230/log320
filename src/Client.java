@@ -229,10 +229,31 @@ class Client {
 
         for(int i=0; 1<board.length;i++){
             for(int j=0;j<board[i].length;j++){
+                if(estGroupe(pieces)){
 
+                }
+                if(!estGroupe(pieces)){
+
+                }
             }
         }
+
+
         return eval;
+    }
+
+    public boolean estGroupe(ArrayList<int[]> pieces){
+        double somme = distancepiece(pieces);
+        boolean groupe = false;
+
+        if(somme == 0){
+            groupe = true;
+        }
+        else{
+            groupe = false;
+        }
+
+        return groupe;
     }
 
     public double distancepiece(ArrayList<int[]> pieces){
