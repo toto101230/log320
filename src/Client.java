@@ -209,19 +209,13 @@ class Client {
     private static ArrayList<String> generateCoup(int[][] board, int j, int i, int k, int nbPiece) {
         ArrayList<String> coups = new ArrayList<>();
         boolean isPossible = true;
-        //todo verifier d'abord si la position d'arrivé est possible
         switch (k) {
             case 0://OUEST
+                if(j - nbPiece < 0 || board[j - nbPiece][i] == numJoueur){
+                    break;
+                }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (j - l < 0) {
-                        isPossible = false;
-                        break;
-                    }
                     if (l < nbPiece && board[j - l][i] != 0 && board[j - l][i] != numJoueur) {
-                        isPossible = false;
-                        break;
-                    }
-                    if (l == nbPiece && board[j - l][i] == numJoueur) {
                         isPossible = false;
                         break;
                     }
@@ -231,16 +225,11 @@ class Client {
                 }
                 break;
             case 4: //EST
+                if(j + nbPiece > 7 || board[j + nbPiece][i] == numJoueur){
+                    break;
+                }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (j + l > 7) {
-                        isPossible = false;
-                        break;
-                    }
                     if (l < nbPiece && board[j + l][i] != 0 && board[j + l][i] != numJoueur) {
-                        isPossible = false;
-                        break;
-                    }
-                    if (l == nbPiece && board[j + l][i] == numJoueur) {
                         isPossible = false;
                         break;
                     }
@@ -250,16 +239,11 @@ class Client {
                 }
                 break;
             case 1: //SUD
+                if(i + nbPiece > 7 || board[j][i + nbPiece] == numJoueur){
+                    break;
+                }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (i + l > 7) {
-                        isPossible = false;
-                        break;
-                    }
                     if (l < nbPiece && board[j][i + l] != 0 && board[j][i + l] != numJoueur) {
-                        isPossible = false;
-                        break;
-                    }
-                    if (l == nbPiece && board[j][i + l] == numJoueur) {
                         isPossible = false;
                         break;
                     }
@@ -269,16 +253,11 @@ class Client {
                 }
                 break;
             case 5: //NORD
+                if(i - nbPiece < 0 || board[j][i - nbPiece] == numJoueur){
+                    break;
+                }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (i - l < 0) {
-                        isPossible = false;
-                        break;
-                    }
                     if (l < nbPiece && board[j][i - l] != 0 && board[j][i - l] != numJoueur) {
-                        isPossible = false;
-                        break;
-                    }
-                    if (l == nbPiece && board[j][i - l] == numJoueur) {
                         isPossible = false;
                         break;
                     }
@@ -288,16 +267,11 @@ class Client {
                 }
                 break;
             case 2: //SUD-OUEST
+                if(j - nbPiece < 0 || i + nbPiece > 7 || board[j - nbPiece][i + nbPiece] == numJoueur){
+                    break;
+                }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (i + l > 7 || j - l < 0) {
-                        isPossible = false;
-                        break;
-                    }
                     if (l < nbPiece && board[j - l][i + l] != 0 && board[j - l][i + l] != numJoueur) {
-                        isPossible = false;
-                        break;
-                    }
-                    if (l == nbPiece && board[j - l][i + l] == numJoueur) {
                         isPossible = false;
                         break;
                     }
@@ -307,16 +281,11 @@ class Client {
                 }
                 break;
             case 6: //NORD-EST
+                if(j + nbPiece > 7 || i - nbPiece < 0 || board[j + nbPiece][i - nbPiece] == numJoueur){
+                    break;
+                }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (i - l < 0 || j + l > 7) {
-                        isPossible = false;
-                        break;
-                    }
                     if (l < nbPiece && board[j + l][i - l] != 0 && board[j + l][i - l] != numJoueur) {
-                        isPossible = false;
-                        break;
-                    }
-                    if (l == nbPiece && board[j + l][i - l] == numJoueur) {
                         isPossible = false;
                         break;
                     }
@@ -326,16 +295,11 @@ class Client {
                 }
                 break;
             case 3: //NORD-OUEST
+                if(j - nbPiece < 0 || i - nbPiece < 0 || board[j - nbPiece][i - nbPiece] == numJoueur){
+                    break;
+                }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (i - l < 0 || j - l < 0) {
-                        isPossible = false;
-                        break;
-                    }
                     if (l < nbPiece && board[j - l][i - l] != 0 && board[j - l][i - l] != numJoueur) {
-                        isPossible = false;
-                        break;
-                    }
-                    if (l == nbPiece && board[j - l][i - l] == numJoueur) {
                         isPossible = false;
                         break;
                     }
@@ -345,16 +309,11 @@ class Client {
                 }
                 break;
             case 7: //SUD-EST
+                if(j + nbPiece > 7 || i + nbPiece > 7 || board[j + nbPiece][i + nbPiece] == numJoueur){
+                    break;
+                }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (i + l > 7 || j + l > 7) {
-                        isPossible = false;
-                        break;
-                    }
                     if (l < nbPiece && board[j + l][i + l] != 0 && board[j + l][i + l] != numJoueur) {
-                        isPossible = false;
-                        break;
-                    }
-                    if (l == nbPiece && board[j + l][i + l] == numJoueur) {
                         isPossible = false;
                         break;
                     }
@@ -363,7 +322,6 @@ class Client {
                     coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j + nbPiece) + "" + (8 - i - nbPiece));
                 }
                 break;
-
         }
         return coups;
     }
