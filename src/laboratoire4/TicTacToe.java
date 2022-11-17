@@ -49,15 +49,16 @@ public class TicTacToe {
             for (int j = 0; j < 3; j++) {
                 if (grille[i][j] == null) {
                     grille[i][j] = "O";
-                    afficherGrille(grille);
+//                    afficherGrille(grille);
                     int scoreTemp = alphaBeta(grille, "O", 0, alpha, beta, true);
                     grille[i][j] = null;
+                    //todo : si score égal, choisir au hasard ou choisir le meilleur
                     if (scoreTemp > score) {
                         score = scoreTemp;
                         ligne = i;
                         colonne = j;
                     }
-                    System.out.println("Score pour " + i + ", " + j + " : " + scoreTemp);
+//                    System.out.println("Score pour " + i + ", " + j + " : " + scoreTemp);
                 }
             }
         }
