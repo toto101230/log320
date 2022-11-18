@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import static java.lang.Thread.sleep;
 
@@ -8,6 +10,8 @@ import static java.lang.Thread.sleep;
 class Client {
 
     static int numJoueur;
+
+
 
     public static void main(String[] args) {
 
@@ -204,6 +208,108 @@ class Client {
             coups.addAll(generateCoup(board, j, 7 - i, k, nbPiece));
         }
         return coups;
+    }
+
+    public int evaluation(int[][] board){
+        int boardlocal[][] = new int[8][8];
+        int eval=0;
+        ArrayList<Integer>valeurjoueur = new ArrayList<>();
+        ArrayList<Integer>valeuradversaire = new ArrayList<>();
+
+        ArrayList<int[]>joueur = new ArrayList<>();
+        ArrayList<int[]>joueuradverse = new ArrayList<>();
+
+        ArrayList<int[]>visitejoueur = new ArrayList<>(); //noeud deja visite par joueur
+        ArrayList<int[]>visitejoueuradverse = new ArrayList<>(); //noeud deja visite par joueur adverse
+
+        for(int i=0;i<board.length;i++){
+            for(int j=0;j<board[i].length;j++){
+                if (board[i][j] !=0) {
+                    if(board[i][j] == numJoueur){
+                            joueur.add(new int[]{i, j});
+                    }
+                    if(board[i][j] != numJoueur){
+                        joueuradverse.add(new int[]{i,j});
+                    }
+                }
+
+            }
+        }
+        for (int[] i : joueur) {
+            if(!visitejoueur.contains(i)){
+                valeurjoueur.add(trouvergroupe(i,joueur,visitejoueur));
+            }
+        }
+
+        for (int[] i : joueuradverse) {
+            if(!visitejoueuradverse.contains(i)){
+                valeuradversaire.add(trouvergroupe(i,joueuradverse,visitejoueuradverse));
+            }
+        }
+
+        Collections.sort(valeurjoueur);
+        int maxjoueur = valeurjoueur.get(valeurjoueur.size()-1);
+
+        Collections.sort(valeuradversaire);
+        int maxadversaire = valeuradversaire.get(valeuradversaire.size()-1);
+
+        if(maxjoueur > maxadversaire){
+            eval = ((maxjoueur)/(valeurjoueur.size()+valeuradversaire.size()))*100;
+        }
+        else if(maxadversaire > maxjoueur){
+            eval = ((maxadversaire)/(valeurjoueur.size()+valeuradversaire.size()))*100;
+        }
+
+        return eval;
+    }
+    public int trouvergroupe(int[] pos,ArrayList<int[]> joueurs,ArrayList<int[]> visitejoueur ){
+
+        int valeur=1;
+        visitejoueur.add(pos);
+
+        for(int i=-1;i<1;i++){
+            for(int j=-1;j<1;j++){
+                if(!visitejoueur.contains(new int[]{pos[0]+i,pos[1]+j}) && joueurs.contains(new int[]{pos[0]+i,pos[1]+j})){
+
+                    valeur += trouvergroupe(new int[]{pos[0]+i,pos[1]+j},joueurs,visitejoueur);
+                }
+
+            }
+        }
+
+        return valeur;
+    }
+
+    public boolean estGroupe(ArrayList<int[]> pieces){
+        double somme = distancepiece(pieces);
+        boolean groupe = false;
+
+        if(somme == 0){
+            groupe = true;
+        }
+        else{
+            groupe = false;
+        }
+
+        return groupe;
+    }
+
+    public double distancepiece(ArrayList<int[]> pieces){
+        double somme = 0;
+        double x;
+        double y;
+        for(int i=0;i<pieces.size();i++){
+            for(int j=0; j<i;j++){
+                somme = calculdistance(pieces.get(i),pieces.get(j));
+            }
+        }
+        return somme;
+    }
+
+    public double calculdistance(int[] p1,int[] p2){
+        int x = (int) Math.pow(p1[0]-p2[0],2);
+        int y = (int) Math.pow(p1[1]-p2[1],2);
+        return Math.sqrt(x+y);
     }
 
     private static ArrayList<String> generateCoup(int[][] board, int j, int i, int k, int nbPiece) {
