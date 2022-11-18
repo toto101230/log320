@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
 import static java.lang.Thread.sleep;
@@ -9,8 +8,10 @@ import static java.lang.Thread.sleep;
 
 class Client {
 
-    static int numJoueur;
+    private static final String LETTRES = "ABCDEFGH";
 
+    static int numJoueur;
+    static int numJoueurAdverse;
 
 
     public static void main(String[] args) {
@@ -34,6 +35,7 @@ class Client {
                 // Debut de la partie en joueur blanc
                 if (cmd == '1') {
                     numJoueur = 4;
+                    numJoueurAdverse = 2;
                     byte[] aBuffer = new byte[1024];
 
                     int size = input.available();
@@ -63,6 +65,7 @@ class Client {
                 // Debut de la partie en joueur Noir
                 if (cmd == '2') {
                     numJoueur = 2;
+                    numJoueurAdverse = 4;
                     System.out.println("Nouvelle partie! Vous jouer noir, attendez le coup des blancs");
                     byte[] aBuffer = new byte[1024];
 
@@ -135,8 +138,8 @@ class Client {
 
     }
 
-    private static void majPlateau(int[][] board, String s) {
-        int[] move = getPosition(s);
+    private static void majPlateau(int[][] board, String coup) {
+        int[] move = getPosition(coup);
         if (move[0] == 8) {
             return;
         }
@@ -144,8 +147,6 @@ class Client {
         board[move[0]][8 - move[1]] = 0;
         board[move[2]][8 - move[3]] = nb;
     }
-
-    static String alpha = "ABCDEFGH";
 
     private static int[] getPosition(String s) {
         int[] move = new int[4];
@@ -160,7 +161,7 @@ class Client {
     private static int getLettre(String s) {
         for (char c : s.toCharArray()) {
             if (Character.isAlphabetic(c)) {
-                return alpha.indexOf(c);
+                return LETTRES.indexOf(c);
             }
         }
         return 0;
@@ -181,18 +182,103 @@ class Client {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        ArrayList<String> coups = generateAllCoups(board);
+        ArrayList<String> coups = generateAllCoups(board, numJoueur);
+        int alpha = Integer.MIN_VALUE;
+        int beta = Integer.MAX_VALUE;
+        int score = Integer.MIN_VALUE;
+        ArrayList<String> bestCoups = new ArrayList<>();
+        for (String coup : coups) {
+            int ancienCase = simulerCoup(board, coup);
+//            afficherBoard(board);
+            int newScore = alphaBeta(copieDeBoard(board), alpha, beta, 0, true);
+            annulerCoup(board, coup, ancienCase);
+            if (newScore > score) {
+                score = newScore;
+                bestCoups.clear();
+                bestCoups.add(coup);
+            } else if (newScore == score) {
+                bestCoups.add(coup);
+            }
+        }
+
         String coup = coups.get((int) (Math.random() * coups.size()));
-        System.out.println("Coup joué : " + coup);
+        if (bestCoups.size() > 0) {
+            coup = bestCoups.get((int) (Math.random() * bestCoups.size()));
+        }
+//        System.out.println("Coup joué : " + coup);
+//        afficherBoard(board);
         return coup;
     }
 
-    private static ArrayList<String> generateAllCoups(int[][] board) {
+    private static int simulerCoup(int[][] board, String coup) {
+        int[] move = getPosition(coup);
+        int ancienCase = board[move[2]][8 - move[3]];
+        board[move[2]][8 - move[3]] = board[move[0]][8 - move[1]];
+        board[move[0]][8 - move[1]] = 0;
+        return ancienCase;
+    }
+
+    private static void annulerCoup(int[][] board, String coup, int ancienCase) {
+        int[] move = getPosition(coup);
+        int nb = board[move[2]][8 - move[3]];
+        board[move[2]][8 - move[3]] = ancienCase;
+        board[move[0]][8 - move[1]] = nb;
+    }
+
+    private static int[][] copieDeBoard(int[][] board) {
+        int[][] newBoard = new int[8][8];
+        for (int i = 0; i < 8; i++) {
+            System.arraycopy(board[i], 0, newBoard[i], 0, 8);
+        }
+        return newBoard;
+    }
+
+    private static int alphaBeta(int[][] board, int alpha, int beta, int i, boolean b) {
+        int gagne = gagne(board);
+        if (gagne != 0) {
+            return gagne - i;
+        } else if (i == 3) {
+            return evaluation(board);
+        } else {
+            int score;
+            if (b) {
+                ArrayList<String> coups = generateAllCoups(board, numJoueurAdverse);
+                for (String coup : coups) {
+                    int ancienCase = simulerCoup(board, coup);
+                    score = alphaBeta(copieDeBoard(board), alpha, beta, i + 1, false);
+                    annulerCoup(board, coup, ancienCase);
+                    alpha = Math.max(alpha, score);
+                    if (alpha >= beta) {
+                        break;
+                    }
+                }
+                return alpha;
+            } else {
+                ArrayList<String> coups = generateAllCoups(board, numJoueur);
+                for (String coup : coups) {
+                    int ancienCase = simulerCoup(board, coup);
+                    score = alphaBeta(copieDeBoard(board), alpha, beta, i + 1, true);
+                    annulerCoup(board, coup, ancienCase);
+                    beta = Math.max(beta, score);
+                    if (alpha >= beta) {
+                        break;
+                    }
+                }
+                return beta;
+            }
+        }
+    }
+
+    private static int gagne(int[][] board) {
+        return 0;// retourne 100 si le joueur gagne, -100 si l'adversaire gagne, 0 sinon
+    }
+
+    private static ArrayList<String> generateAllCoups(int[][] board, int joueur) {
         ArrayList<String> coups = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (board[j][i] == numJoueur) {
-                    coups.addAll(generateCoups(board, j, 7 - i));
+                if (board[j][i] == joueur) {
+                    coups.addAll(generateCoups(board, j, 7 - i, joueur));
 //                    System.out.println("coups : " + coups + " en  : " + alpha.charAt(j) + "" + (8 - i));
                 }
             }
@@ -201,231 +287,209 @@ class Client {
 
     }
 
-    private static ArrayList<String> generateCoups(int[][] board, int j, int i) {
+    private static ArrayList<String> generateCoups(int[][] board, int j, int i, int joueur) {
         ArrayList<String> coups = new ArrayList<>();
         for (int k = 0; k < 8; k++) {
             int nbPiece = calculeNbPieces(board, j, i, k);
-            coups.addAll(generateCoup(board, j, 7 - i, k, nbPiece));
+            coups.addAll(generateCoup(board, j, 7 - i, k, nbPiece, joueur));
         }
         return coups;
     }
 
-    public int evaluation(int[][] board){
+    public static int evaluation(int[][] board) {
         int boardlocal[][] = new int[8][8];
-        int eval=0;
-        ArrayList<Integer>valeurjoueur = new ArrayList<>();
-        ArrayList<Integer>valeuradversaire = new ArrayList<>();
+        double eval = 0;
+        ArrayList<Integer> valeurjoueur = new ArrayList<>();
+        ArrayList<Integer> valeuradversaire = new ArrayList<>();
 
-        ArrayList<int[]>joueur = new ArrayList<>();
-        ArrayList<int[]>joueuradverse = new ArrayList<>();
+        ArrayList<int[]> joueur = new ArrayList<>();
+        ArrayList<int[]> joueuradverse = new ArrayList<>();
 
-        ArrayList<int[]>visitejoueur = new ArrayList<>(); //noeud deja visite par joueur
-        ArrayList<int[]>visitejoueuradverse = new ArrayList<>(); //noeud deja visite par joueur adverse
+        ArrayList<int[]> visitejoueur = new ArrayList<>(); //noeud deja visite par joueur
+        ArrayList<int[]> visitejoueuradverse = new ArrayList<>(); //noeud deja visite par joueur adverse
 
-        for(int i=0;i<board.length;i++){
-            for(int j=0;j<board[i].length;j++){
-                if (board[i][j] !=0) {
-                    if(board[i][j] == numJoueur){
-                            joueur.add(new int[]{i, j});
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] != 0) {
+                    if (board[i][j] == numJoueur) {
+                        joueur.add(new int[]{i, j});
                     }
-                    if(board[i][j] != numJoueur){
-                        joueuradverse.add(new int[]{i,j});
+                    if (board[i][j] != numJoueur) {
+                        joueuradverse.add(new int[]{i, j});
                     }
                 }
 
             }
         }
         for (int[] i : joueur) {
-            if(!visitejoueur.contains(i)){
-                valeurjoueur.add(trouvergroupe(i,joueur,visitejoueur));
+            if (!contiens(visitejoueur, i)) {
+                valeurjoueur.add(trouvergroupe(i, joueur, visitejoueur));
             }
         }
 
         for (int[] i : joueuradverse) {
-            if(!visitejoueuradverse.contains(i)){
-                valeuradversaire.add(trouvergroupe(i,joueuradverse,visitejoueuradverse));
+            if (!contiens(visitejoueuradverse, i)) {
+                valeuradversaire.add(trouvergroupe(i, joueuradverse, visitejoueuradverse));
             }
         }
 
         Collections.sort(valeurjoueur);
-        int maxjoueur = valeurjoueur.get(valeurjoueur.size()-1);
+        double maxjoueur = valeurjoueur.get(valeurjoueur.size() - 1);
 
         Collections.sort(valeuradversaire);
-        int maxadversaire = valeuradversaire.get(valeuradversaire.size()-1);
+        double maxadversaire = valeuradversaire.get(valeuradversaire.size() - 1);
+        System.out.println(maxjoueur + " " + valeurjoueur.size() + " " + valeuradversaire.size());
 
-        if(maxjoueur > maxadversaire){
-            eval = ((maxjoueur)/(valeurjoueur.size()+valeuradversaire.size()))*100;
-        }
-        else if(maxadversaire > maxjoueur){
-            eval = ((maxadversaire)/(valeurjoueur.size()+valeuradversaire.size()))*100;
+        if (maxjoueur > maxadversaire) {
+            eval = ((maxjoueur) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
+        } else if (maxadversaire > maxjoueur) {
+            eval = ((maxadversaire) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
         }
 
-        return eval;
+        System.out.println("eval : " + eval);
+        System.out.println("visite : " + visitejoueur.get(0)[0] + " " + visitejoueur.get(0)[1] + " " + visitejoueur.get(1)[0] + " " + visitejoueur.get(1)[1]);
+        return (int) eval;
     }
-    public int trouvergroupe(int[] pos,ArrayList<int[]> joueurs,ArrayList<int[]> visitejoueur ){
 
-        int valeur=1;
+    private static boolean contiens(ArrayList<int[]> visitejoueur, int[] i) {
+        for (int[] ints : visitejoueur) {
+            if (ints[0] == i[0] && ints[1] == i[1]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static int trouvergroupe(int[] pos, ArrayList<int[]> joueurs, ArrayList<int[]> visitejoueur) {
+
+        int valeur = 1;
         visitejoueur.add(pos);
 
-        for(int i=-1;i<1;i++){
-            for(int j=-1;j<1;j++){
-                if(!visitejoueur.contains(new int[]{pos[0]+i,pos[1]+j}) && joueurs.contains(new int[]{pos[0]+i,pos[1]+j})){
-
-                    valeur += trouvergroupe(new int[]{pos[0]+i,pos[1]+j},joueurs,visitejoueur);
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (!contiens(visitejoueur, new int[]{pos[0] + i, pos[1] + j}) && contiens(joueurs, new int[]{pos[0] + i, pos[1] + j})) {
+                    valeur += trouvergroupe(new int[]{pos[0] + i, pos[1] + j}, joueurs, visitejoueur);
                 }
-
             }
         }
 
         return valeur;
     }
 
-    public boolean estGroupe(ArrayList<int[]> pieces){
-        double somme = distancepiece(pieces);
-        boolean groupe = false;
-
-        if(somme == 0){
-            groupe = true;
-        }
-        else{
-            groupe = false;
-        }
-
-        return groupe;
-    }
-
-    public double distancepiece(ArrayList<int[]> pieces){
-        double somme = 0;
-        double x;
-        double y;
-        for(int i=0;i<pieces.size();i++){
-            for(int j=0; j<i;j++){
-                somme = calculdistance(pieces.get(i),pieces.get(j));
-            }
-        }
-        return somme;
-    }
-
-    public double calculdistance(int[] p1,int[] p2){
-        int x = (int) Math.pow(p1[0]-p2[0],2);
-        int y = (int) Math.pow(p1[1]-p2[1],2);
-        return Math.sqrt(x+y);
-    }
-
-    private static ArrayList<String> generateCoup(int[][] board, int j, int i, int k, int nbPiece) {
+    private static ArrayList<String> generateCoup(int[][] board, int j, int i, int k, int nbPiece, int joueur) {
         ArrayList<String> coups = new ArrayList<>();
         boolean isPossible = true;
         switch (k) {
             case 0://OUEST
-                if(j - nbPiece < 0 || board[j - nbPiece][i] == numJoueur){
+                if (j - nbPiece < 0 || board[j - nbPiece][i] == joueur) {
                     break;
                 }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (l < nbPiece && board[j - l][i] != 0 && board[j - l][i] != numJoueur) {
+                    if (l < nbPiece && board[j - l][i] != 0 && board[j - l][i] != joueur) {
                         isPossible = false;
                         break;
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j - nbPiece) + "" + (8 - i));
+                    coups.add(LETTRES.charAt(j) + "" + (8 - i) + "-" + LETTRES.charAt(j - nbPiece) + "" + (8 - i));
                 }
                 break;
             case 4: //EST
-                if(j + nbPiece > 7 || board[j + nbPiece][i] == numJoueur){
+                if (j + nbPiece > 7 || board[j + nbPiece][i] == joueur) {
                     break;
                 }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (l < nbPiece && board[j + l][i] != 0 && board[j + l][i] != numJoueur) {
+                    if (l < nbPiece && board[j + l][i] != 0 && board[j + l][i] != joueur) {
                         isPossible = false;
                         break;
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j + nbPiece) + "" + (8 - i));
+                    coups.add(LETTRES.charAt(j) + "" + (8 - i) + "-" + LETTRES.charAt(j + nbPiece) + "" + (8 - i));
                 }
                 break;
             case 1: //SUD
-                if(i + nbPiece > 7 || board[j][i + nbPiece] == numJoueur){
+                if (i + nbPiece > 7 || board[j][i + nbPiece] == joueur) {
                     break;
                 }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (l < nbPiece && board[j][i + l] != 0 && board[j][i + l] != numJoueur) {
+                    if (l < nbPiece && board[j][i + l] != 0 && board[j][i + l] != joueur) {
                         isPossible = false;
                         break;
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j) + "" + (8 - i - nbPiece));
+                    coups.add(LETTRES.charAt(j) + "" + (8 - i) + "-" + LETTRES.charAt(j) + "" + (8 - i - nbPiece));
                 }
                 break;
             case 5: //NORD
-                if(i - nbPiece < 0 || board[j][i - nbPiece] == numJoueur){
+                if (i - nbPiece < 0 || board[j][i - nbPiece] == joueur) {
                     break;
                 }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (l < nbPiece && board[j][i - l] != 0 && board[j][i - l] != numJoueur) {
+                    if (l < nbPiece && board[j][i - l] != 0 && board[j][i - l] != joueur) {
                         isPossible = false;
                         break;
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j) + "" + (8 - i + nbPiece));
+                    coups.add(LETTRES.charAt(j) + "" + (8 - i) + "-" + LETTRES.charAt(j) + "" + (8 - i + nbPiece));
                 }
                 break;
             case 2: //SUD-OUEST
-                if(j - nbPiece < 0 || i + nbPiece > 7 || board[j - nbPiece][i + nbPiece] == numJoueur){
+                if (j - nbPiece < 0 || i + nbPiece > 7 || board[j - nbPiece][i + nbPiece] == joueur) {
                     break;
                 }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (l < nbPiece && board[j - l][i + l] != 0 && board[j - l][i + l] != numJoueur) {
+                    if (l < nbPiece && board[j - l][i + l] != 0 && board[j - l][i + l] != joueur) {
                         isPossible = false;
                         break;
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j - nbPiece) + "" + (8 - i - nbPiece));
+                    coups.add(LETTRES.charAt(j) + "" + (8 - i) + "-" + LETTRES.charAt(j - nbPiece) + "" + (8 - i - nbPiece));
                 }
                 break;
             case 6: //NORD-EST
-                if(j + nbPiece > 7 || i - nbPiece < 0 || board[j + nbPiece][i - nbPiece] == numJoueur){
+                if (j + nbPiece > 7 || i - nbPiece < 0 || board[j + nbPiece][i - nbPiece] == joueur) {
                     break;
                 }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (l < nbPiece && board[j + l][i - l] != 0 && board[j + l][i - l] != numJoueur) {
+                    if (l < nbPiece && board[j + l][i - l] != 0 && board[j + l][i - l] != joueur) {
                         isPossible = false;
                         break;
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j + nbPiece) + "" + (8 - i + nbPiece));
+                    coups.add(LETTRES.charAt(j) + "" + (8 - i) + "-" + LETTRES.charAt(j + nbPiece) + "" + (8 - i + nbPiece));
                 }
                 break;
             case 3: //NORD-OUEST
-                if(j - nbPiece < 0 || i - nbPiece < 0 || board[j - nbPiece][i - nbPiece] == numJoueur){
+                if (j - nbPiece < 0 || i - nbPiece < 0 || board[j - nbPiece][i - nbPiece] == joueur) {
                     break;
                 }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (l < nbPiece && board[j - l][i - l] != 0 && board[j - l][i - l] != numJoueur) {
+                    if (l < nbPiece && board[j - l][i - l] != 0 && board[j - l][i - l] != joueur) {
                         isPossible = false;
                         break;
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j - nbPiece) + "" + (8 - i + nbPiece));
+                    coups.add(LETTRES.charAt(j) + "" + (8 - i) + "-" + LETTRES.charAt(j - nbPiece) + "" + (8 - i + nbPiece));
                 }
                 break;
             case 7: //SUD-EST
-                if(j + nbPiece > 7 || i + nbPiece > 7 || board[j + nbPiece][i + nbPiece] == numJoueur){
+                if (j + nbPiece > 7 || i + nbPiece > 7 || board[j + nbPiece][i + nbPiece] == joueur) {
                     break;
                 }
                 for (int l = 1; l <= nbPiece; l++) {
-                    if (l < nbPiece && board[j + l][i + l] != 0 && board[j + l][i + l] != numJoueur) {
+                    if (l < nbPiece && board[j + l][i + l] != 0 && board[j + l][i + l] != joueur) {
                         isPossible = false;
                         break;
                     }
                 }
                 if (isPossible) {
-                    coups.add(alpha.charAt(j) + "" + (8 - i) + "-" + alpha.charAt(j + nbPiece) + "" + (8 - i - nbPiece));
+                    coups.add(LETTRES.charAt(j) + "" + (8 - i) + "-" + LETTRES.charAt(j + nbPiece) + "" + (8 - i - nbPiece));
                 }
                 break;
         }
@@ -499,12 +563,16 @@ class Client {
     }
 
     public static void afficherBoard(int[][] board) {
+        System.out.println("-------------------");
         for (int i = 0; i < 8; i++) {
+            System.out.print(8 - i + " | ");
             for (int j = 0; j < 8; j++) {
                 System.out.print(board[j][i] + " ");
             }
             System.out.println();
         }
+        System.out.println("-------------------");
+        System.out.println("    A B C D E F G H");
     }
 
 }

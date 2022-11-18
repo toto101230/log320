@@ -49,7 +49,7 @@ public class TicTacToe {
             for (int j = 0; j < 3; j++) {
                 if (grille[i][j] == null) {
                     grille[i][j] = "O";
-//                    afficherGrille(grille);
+                    afficherGrille(grille);
                     int scoreTemp = alphaBeta(grille, "O", 0, alpha, beta, true);
                     grille[i][j] = null;
                     //todo : si score égal, choisir au hasard ou choisir le meilleur
@@ -58,7 +58,7 @@ public class TicTacToe {
                         ligne = i;
                         colonne = j;
                     }
-//                    System.out.println("Score pour " + i + ", " + j + " : " + scoreTemp);
+                    System.out.println("Score pour " + i + ", " + j + " : " + scoreTemp);
                 }
             }
         }
@@ -69,44 +69,46 @@ public class TicTacToe {
 //        System.out.println(i +" "+ gagne(grille, "X"));
 //        afficherGrille(grille);
         if (gagne(grille, "O") && b) {
-            return 10-i;
+            return 10;
         } else if (gagne(grille, "X") && !b) {
-            return -10+i;
+            return -10;
         } else if (i == 9) {
             return 0;
         } else {
             if (b) {
-                int score = Integer.MAX_VALUE;
-                for (int j = 0; j < 3; j++) {
-                    for (int k = 0; k < 3; k++) {
-                        if (grille[j][k] == null) {
-                            grille[j][k] = "X";
-                            score = Math.min(score, alphaBeta(grille, "X", i + 1, alpha, beta, false));
-                            grille[j][k] = null;
-                            alpha = Math.min(alpha, score);
-                            if (beta <= alpha) {
-                                break;
-                            }
-                        }
-                    }
-                }
-                return score;
-            } else {
                 int score = Integer.MIN_VALUE;
                 for (int j = 0; j < 3; j++) {
                     for (int k = 0; k < 3; k++) {
                         if (grille[j][k] == null) {
-                            grille[j][k] = "O";
-                            score = Math.max(score, alphaBeta(grille,  "O", i + 1, alpha, beta, true));
+                            grille[j][k] = "X";
+                            score = alphaBeta(grille, "X", i + 1, alpha, beta, false);
                             grille[j][k] = null;
-                            beta = Math.max(beta, score);
-                            if (beta <= alpha) {
+                            alpha = Math.max(alpha, score);
+                            if (alpha >= beta) {
+//                                System.out.println("Coupe alpha");
                                 break;
                             }
                         }
                     }
                 }
-                return score;
+                return alpha;
+            } else {
+                int score = Integer.MAX_VALUE;
+                for (int j = 0; j < 3; j++) {
+                    for (int k = 0; k < 3; k++) {
+                        if (grille[j][k] == null) {
+                            grille[j][k] = "O";
+                            score = alphaBeta(grille,  "O", i + 1, alpha, beta, true);
+                            grille[j][k] = null;
+                            beta = Math.min(beta, score);
+                            if (alpha >= beta) {
+//                                System.out.println("Coupe beta");
+                                break;
+                            }
+                        }
+                    }
+                }
+                return beta;
             }
         }
     }
@@ -136,30 +138,13 @@ public class TicTacToe {
     }
 
     private boolean gagne(String[][] grille, String joueur) {
-        if (grille[0][0] == joueur && grille[0][1] == joueur && grille[0][2] == joueur) {
-            return true;
-        }
-        if (grille[1][0] == joueur && grille[1][1] == joueur && grille[1][2] == joueur) {
-            return true;
-        }
-        if (grille[2][0] == joueur && grille[2][1] == joueur && grille[2][2] == joueur) {
-            return true;
-        }
-        if (grille[0][0] == joueur && grille[1][0] == joueur && grille[2][0] == joueur) {
-            return true;
-        }
-        if (grille[0][1] == joueur && grille[1][1] == joueur && grille[2][1] == joueur) {
-            return true;
-        }
-        if (grille[0][2] == joueur && grille[1][2] == joueur && grille[2][2] == joueur) {
-            return true;
-        }
-        if (grille[0][0] == joueur && grille[1][1] == joueur && grille[2][2] == joueur) {
-            return true;
-        }
-        if (grille[0][2] == joueur && grille[1][1] == joueur && grille[2][0] == joueur) {
-            return true;
-        }
-        return false;
+        return (grille[0][0] == joueur && grille[0][1] == joueur && grille[0][2] == joueur)
+                || (grille[1][0] == joueur && grille[1][1] == joueur && grille[1][2] == joueur)
+                || (grille[2][0] == joueur && grille[2][1] == joueur && grille[2][2] == joueur)
+                || (grille[0][0] == joueur && grille[1][0] == joueur && grille[2][0] == joueur)
+                || (grille[0][1] == joueur && grille[1][1] == joueur && grille[2][1] == joueur)
+                || (grille[0][2] == joueur && grille[1][2] == joueur && grille[2][2] == joueur)
+                || (grille[0][0] == joueur && grille[1][1] == joueur && grille[2][2] == joueur)
+                || (grille[0][2] == joueur && grille[1][1] == joueur && grille[2][0] == joueur);
     }
 }
