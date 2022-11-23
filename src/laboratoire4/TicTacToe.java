@@ -69,9 +69,9 @@ public class TicTacToe {
 //        System.out.println(i +" "+ gagne(grille, "X"));
 //        afficherGrille(grille);
         if (gagne(grille, "O") && b) {
-            return 10;
+            return 10 - i;
         } else if (gagne(grille, "X") && !b) {
-            return -10;
+            return -10 + i;
         } else if (i == 9) {
             return 0;
         } else {
@@ -81,34 +81,34 @@ public class TicTacToe {
                     for (int k = 0; k < 3; k++) {
                         if (grille[j][k] == null) {
                             grille[j][k] = "X";
-                            score = alphaBeta(grille, "X", i + 1, alpha, beta, false);
+                            score = Math.max(score, alphaBeta(grille, "X", i + 1, alpha, beta, false));
                             grille[j][k] = null;
-                            alpha = Math.max(alpha, score);
-                            if (alpha >= beta) {
+                            if (score >= beta) {
 //                                System.out.println("Coupe alpha");
-                                break;
+                                return score;
                             }
+                            alpha = Math.max(alpha, score);
                         }
                     }
                 }
-                return alpha;
+                return score;
             } else {
                 int score = Integer.MAX_VALUE;
                 for (int j = 0; j < 3; j++) {
                     for (int k = 0; k < 3; k++) {
                         if (grille[j][k] == null) {
                             grille[j][k] = "O";
-                            score = alphaBeta(grille,  "O", i + 1, alpha, beta, true);
+                            score = Math.min(score, alphaBeta(grille, "O", i + 1, alpha, beta, true));
                             grille[j][k] = null;
-                            beta = Math.min(beta, score);
-                            if (alpha >= beta) {
+                            if (alpha >= score) {
 //                                System.out.println("Coupe beta");
-                                break;
+                                return score;
                             }
+                            beta = Math.min(beta, score);
                         }
                     }
                 }
-                return beta;
+                return score;
             }
         }
     }

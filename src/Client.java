@@ -234,42 +234,44 @@ class Client {
     }
 
     private static int alphaBeta(int[][] board, int alpha, int beta, int i, boolean b) {
-        int gagne = gagne(board);
+        int gagne = gagne(board, i);
         if (gagne != 0) {
-            return gagne - i;
+            return gagne;
         } else if (i == 3) {
             return evaluation(board);
         } else {
             int score;
             if (b) {
+                score = Integer.MIN_VALUE;
                 ArrayList<String> coups = generateAllCoups(board, numJoueurAdverse);
                 for (String coup : coups) {
                     int ancienCase = simulerCoup(board, coup);
-                    score = alphaBeta(copieDeBoard(board), alpha, beta, i + 1, false);
+                    score = Math.max(score, alphaBeta(copieDeBoard(board), alpha, beta, i + 1, false));
                     annulerCoup(board, coup, ancienCase);
-                    alpha = Math.max(alpha, score);
-                    if (alpha >= beta) {
-                        break;
+                    if (score >= beta) {
+                        return score;
                     }
+                    alpha = Math.max(alpha, score);
                 }
-                return alpha;
+                return score;
             } else {
+                score = Integer.MAX_VALUE;
                 ArrayList<String> coups = generateAllCoups(board, numJoueur);
                 for (String coup : coups) {
                     int ancienCase = simulerCoup(board, coup);
-                    score = alphaBeta(copieDeBoard(board), alpha, beta, i + 1, true);
+                    score = Math.min(score, alphaBeta(copieDeBoard(board), alpha, beta, i + 1, true));
                     annulerCoup(board, coup, ancienCase);
-                    beta = Math.max(beta, score);
                     if (alpha >= beta) {
-                        break;
+                        return score;
                     }
+                    beta = Math.min(beta, score);
                 }
-                return beta;
+                return score;
             }
         }
     }
 
-    private static int gagne(int[][] board) {
+    private static int gagne(int[][] board, int nbTour) {
         return 0;// retourne 100 si le joueur gagne, -100 si l'adversaire gagne, 0 sinon
     }
 
@@ -338,7 +340,7 @@ class Client {
 
         Collections.sort(valeuradversaire);
         double maxadversaire = valeuradversaire.get(valeuradversaire.size() - 1);
-        System.out.println(maxjoueur + " " + valeurjoueur.size() + " " + valeuradversaire.size());
+//        System.out.println(maxjoueur + " " + valeurjoueur.size() + " " + valeuradversaire.size());
 
         if (maxjoueur > maxadversaire) {
             eval = ((maxjoueur) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
@@ -346,8 +348,8 @@ class Client {
             eval = ((maxadversaire) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
         }
 
-        System.out.println("eval : " + eval);
-        System.out.println("visite : " + visitejoueur.get(0)[0] + " " + visitejoueur.get(0)[1] + " " + visitejoueur.get(1)[0] + " " + visitejoueur.get(1)[1]);
+//        System.out.println("eval : " + eval);
+//        System.out.println("visite : " + visitejoueur.get(0)[0] + " " + visitejoueur.get(0)[1] + " " + visitejoueur.get(1)[0] + " " + visitejoueur.get(1)[1]);
         return (int) eval;
     }
 
