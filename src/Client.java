@@ -234,11 +234,11 @@ class Client {
     }
 
     private static int alphaBeta(int[][] board, int alpha, int beta, int i, boolean b) {
-        int gagne = gagne(board, i);
-        if (gagne != 0) {
+        int gagne = evaluation(board);
+        if (gagne == 100 || gagne == -100) {
             return gagne;
         } else if (i == 3) {
-            return evaluation(board);
+            return gagne;
         } else {
             int score;
             if (b) {
@@ -269,10 +269,6 @@ class Client {
                 return score;
             }
         }
-    }
-
-    private static int gagne(int[][] board, int nbTour) {
-        return 0;// retourne 100 si le joueur gagne, -100 si l'adversaire gagne, 0 sinon
     }
 
     private static ArrayList<String> generateAllCoups(int[][] board, int joueur) {
@@ -333,6 +329,13 @@ class Client {
             if (!contiens(visitejoueuradverse, i)) {
                 valeuradversaire.add(trouvergroupe(i, joueuradverse, visitejoueuradverse));
             }
+        }
+
+        if(valeurjoueur.size() <= 1){
+            return 100;
+        }
+        if(valeuradversaire.size() <= 1){
+            return -100;
         }
 
         Collections.sort(valeurjoueur);
