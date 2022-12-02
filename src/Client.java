@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import static java.lang.Thread.sleep;
 
@@ -237,7 +236,7 @@ class Client {
         int gagne = evaluation(board);
         if (gagne == 100 || gagne == -100) {
             return gagne;
-        } else if (i == 3) {
+        } else if (i == 3) { //à faire varier au fur et à mesure
             return gagne;
         } else {
             int score;
@@ -297,8 +296,8 @@ class Client {
     public static int evaluation(int[][] board) {
         int boardlocal[][] = new int[8][8];
         double eval = 0;
-        ArrayList<Integer> valeurjoueur = new ArrayList<>();
-        ArrayList<Integer> valeuradversaire = new ArrayList<>();
+        ArrayList<ArrayList<int[]>> valeurjoueur = new ArrayList<>();
+        ArrayList<ArrayList<int[]>> valeuradversaire = new ArrayList<>();
 
         ArrayList<int[]> joueur = new ArrayList<>();
         ArrayList<int[]> joueuradverse = new ArrayList<>();
@@ -331,28 +330,86 @@ class Client {
             }
         }
 
-        if(valeurjoueur.size() <= 1){
+        if (valeurjoueur.size() <= 1) {
             return 100;
         }
-        if(valeuradversaire.size() <= 1){
+        if (valeuradversaire.size() <= 1) {
             return -100;
         }
 
-        Collections.sort(valeurjoueur);
-        double maxjoueur = valeurjoueur.get(valeurjoueur.size() - 1);
+        //cacul de la zone la plus grande pour le joueur
+        int[] coinHauteGauche = new int[]{7, 7};
+        int[] coinBasDroite = new int[]{0, 0};
 
-        Collections.sort(valeuradversaire);
-        double maxadversaire = valeuradversaire.get(valeuradversaire.size() - 1);
-//        System.out.println(maxjoueur + " " + valeurjoueur.size() + " " + valeuradversaire.size());
-
-        if (maxjoueur > maxadversaire) {
-            eval = ((maxjoueur) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
-        } else if (maxadversaire > maxjoueur) {
-            eval = ((maxadversaire) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
+        for (ArrayList<int[]> i : valeurjoueur) {
+            for (int[] pos : i) {
+                if (pos[0] < coinHauteGauche[0]) {
+                    coinHauteGauche[0] = pos[0];
+                }
+                if (pos[1] < coinHauteGauche[1]) {
+                    coinHauteGauche[1] = pos[1];
+                }
+                if (pos[0] > coinBasDroite[0]) {
+                    coinBasDroite[0] = pos[0];
+                }
+                if (pos[1] > coinBasDroite[1]) {
+                    coinBasDroite[1] = pos[1];
+                }
+            }
         }
+
+        //calcul de la zone la plus grande pour l'adversaire
+        int[] coinHauteGaucheAdverse = new int[]{7, 7};
+        int[] coinBasDroiteAdverse = new int[]{0, 0};
+
+        for (ArrayList<int[]> i : valeuradversaire) {
+            for (int[] pos : i) {
+                if (pos[0] < coinHauteGaucheAdverse[0]) {
+                    coinHauteGaucheAdverse[0] = pos[0];
+                }
+                if (pos[1] < coinHauteGaucheAdverse[1]) {
+                    coinHauteGaucheAdverse[1] = pos[1];
+                }
+                if (pos[0] > coinBasDroiteAdverse[0]) {
+                    coinBasDroiteAdverse[0] = pos[0];
+                }
+                if (pos[1] > coinBasDroiteAdverse[1]) {
+                    coinBasDroiteAdverse[1] = pos[1];
+                }
+            }
+        }
+
+        eval += 100 - (coinBasDroite[0] - coinHauteGauche[0]) * (coinBasDroite[1] - coinHauteGauche[1]) - valeurjoueur.size();
+        eval += -100 + (coinBasDroiteAdverse[0] - coinHauteGaucheAdverse[0]) * (coinBasDroiteAdverse[1] - coinHauteGaucheAdverse[1]) + valeuradversaire.size();
+
+//        Collections.sort(valeurjoueur);
+//        double maxjoueur = valeurjoueur.get(valeurjoueur.size() - 1);
+
+//        Collections.sort(valeurjoueur);
+//        double maxjoueur = valeurjoueur.get(valeurjoueur.size() - 1);
+//
+//        Collections.sort(valeuradversaire);
+//        double maxadversaire = valeuradversaire.get(valeuradversaire.size() - 1);
+////        System.out.println(maxjoueur + " " + valeurjoueur.size() + " " + valeuradversaire.size());
+//
+//        if (maxjoueur > maxadversaire) {
+//            eval = ((maxjoueur) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
+//        } else if (maxadversaire > maxjoueur) {
+//            eval = ((maxadversaire) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
+//        }
 
 //        System.out.println("eval : " + eval);
 //        System.out.println("visite : " + visitejoueur.get(0)[0] + " " + visitejoueur.get(0)[1] + " " + visitejoueur.get(1)[0] + " " + visitejoueur.get(1)[1]);
+
+        //aficher valeurjoueur
+//        for (ArrayList<int[]> i : valeurjoueur) {
+//            for (int[] j : i) {
+//                System.out.print("[" + j[0] + " " + j[1] + "]");
+//            }
+//            System.out.println();
+//        }
+
+
         return (int) eval;
     }
 
@@ -365,20 +422,21 @@ class Client {
         return false;
     }
 
-    public static int trouvergroupe(int[] pos, ArrayList<int[]> joueurs, ArrayList<int[]> visitejoueur) {
+    public static ArrayList<int[]> trouvergroupe(int[] pos, ArrayList<int[]> joueurs, ArrayList<int[]> visitejoueur) {
 
-        int valeur = 1;
+        ArrayList<int[]> groupe = new ArrayList<>();
         visitejoueur.add(pos);
+        groupe.add(pos);
 
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 if (!contiens(visitejoueur, new int[]{pos[0] + i, pos[1] + j}) && contiens(joueurs, new int[]{pos[0] + i, pos[1] + j})) {
-                    valeur += trouvergroupe(new int[]{pos[0] + i, pos[1] + j}, joueurs, visitejoueur);
+                    groupe.addAll(trouvergroupe(new int[]{pos[0] + i, pos[1] + j}, joueurs, visitejoueur));
                 }
             }
         }
 
-        return valeur;
+        return groupe;
     }
 
     private static ArrayList<String> generateCoup(int[][] board, int j, int i, int k, int nbPiece, int joueur) {
