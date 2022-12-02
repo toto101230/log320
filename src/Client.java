@@ -1,3 +1,5 @@
+/*author : Thomas PIENNE, Romain Vermande,*/
+
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ class Client {
 
     static int numJoueur;
     static int numJoueurAdverse;
+    static int profondeur = 3;
 
 
     public static void main(String[] args) {
@@ -185,11 +188,12 @@ class Client {
         int alpha = Integer.MIN_VALUE;
         int beta = Integer.MAX_VALUE;
         int score = Integer.MIN_VALUE;
+        long startTime = System.currentTimeMillis();
         ArrayList<String> bestCoups = new ArrayList<>();
         for (String coup : coups) {
             int ancienCase = simulerCoup(board, coup);
 //            afficherBoard(board);
-            int newScore = alphaBeta(copieDeBoard(board), alpha, beta, 0, true);
+            int newScore = alphaBeta(copieDeBoard(board), alpha, beta, 0, true, startTime);
             annulerCoup(board, coup, ancienCase);
             if (newScore > score) {
                 score = newScore;
@@ -198,6 +202,12 @@ class Client {
             } else if (newScore == score) {
                 bestCoups.add(coup);
             }
+        }
+        long endTime = System.currentTimeMillis();
+        if (endTime - startTime > 4500) {
+            profondeur--;
+        } else if (endTime - startTime < 3000) {
+            profondeur++;
         }
 
         String coup = coups.get((int) (Math.random() * coups.size()));
@@ -232,11 +242,12 @@ class Client {
         return newBoard;
     }
 
-    private static int alphaBeta(int[][] board, int alpha, int beta, int i, boolean b) {
+    //Speudo code venant de wikipedia
+    private static int alphaBeta(int[][] board, int alpha, int beta, int i, boolean b, long startTime) {
         int gagne = evaluation(board);
         if (gagne == 100 || gagne == -100) {
             return gagne;
-        } else if (i == 3) { //à faire varier au fur et à mesure
+        } else if (i == profondeur || System.currentTimeMillis() - startTime > 4500) {
             return gagne;
         } else {
             int score;
@@ -245,7 +256,7 @@ class Client {
                 ArrayList<String> coups = generateAllCoups(board, numJoueurAdverse);
                 for (String coup : coups) {
                     int ancienCase = simulerCoup(board, coup);
-                    score = Math.max(score, alphaBeta(copieDeBoard(board), alpha, beta, i + 1, false));
+                    score = Math.max(score, alphaBeta(copieDeBoard(board), alpha, beta, i + 1, false, startTime));
                     annulerCoup(board, coup, ancienCase);
                     if (score >= beta) {
                         return score;
@@ -258,7 +269,7 @@ class Client {
                 ArrayList<String> coups = generateAllCoups(board, numJoueur);
                 for (String coup : coups) {
                     int ancienCase = simulerCoup(board, coup);
-                    score = Math.min(score, alphaBeta(copieDeBoard(board), alpha, beta, i + 1, true));
+                    score = Math.min(score, alphaBeta(copieDeBoard(board), alpha, beta, i + 1, true, startTime));
                     annulerCoup(board, coup, ancienCase);
                     if (alpha >= beta) {
                         return score;
@@ -331,10 +342,10 @@ class Client {
         }
 
         if (valeurjoueur.size() <= 1) {
-            return 100;
+            return 1000;
         }
         if (valeuradversaire.size() <= 1) {
-            return -100;
+            return -1000;
         }
 
         //cacul de la zone la plus grande pour le joueur
@@ -379,8 +390,42 @@ class Client {
             }
         }
 
-        eval += 100 - (coinBasDroite[0] - coinHauteGauche[0]) * (coinBasDroite[1] - coinHauteGauche[1]) - valeurjoueur.size();
-        eval += -100 + (coinBasDroiteAdverse[0] - coinHauteGaucheAdverse[0]) * (coinBasDroiteAdverse[1] - coinHauteGaucheAdverse[1]) + valeuradversaire.size();
+//        //calcul de la densité de la zone du joueur
+//        double densite = 0;
+//        double densiteMax = 0;
+//        for (int i = coinHauteGauche[0]; i <= coinBasDroite[0]; i++) {
+//            for (int j = coinHauteGauche[1]; j <= coinBasDroite[1]; j++) {
+//                if (board[i][j] == numJoueur) {
+//                    densite++;
+//                }
+//                densiteMax++;
+//            }
+//        }
+//
+//        //calcul de la densité de la zone de l'adversaire
+//        double densiteAdverse = 0;
+//        double densiteMaxAdverse = 0;
+//        for (int i = coinHauteGaucheAdverse[0]; i <= coinBasDroiteAdverse[0]; i++) {
+//            for (int j = coinHauteGaucheAdverse[1]; j <= coinBasDroiteAdverse[1]; j++) {
+//                if (board[i][j] == numJoueurAdverse) {
+//                    densiteAdverse++;
+//                }
+//                densiteMaxAdverse++;
+//            }
+//        }
+//
+//        eval += 100;
+//        eval -= (coinBasDroite[0] - coinHauteGauche[0]) * (coinBasDroite[1] - coinHauteGauche[1]) * (densiteMax-densite);
+//        eval -= (valeurjoueur.size() - 1) * 10;
+//
+//
+//        eval -= 100 ;
+//        eval += (coinBasDroiteAdverse[0] - coinHauteGaucheAdverse[0]) * (coinBasDroiteAdverse[1] - coinHauteGaucheAdverse[1]) * (densiteMaxAdverse-densiteAdverse);
+//        eval += (valeuradversaire.size() - 1) * 10;
+
+
+        eval += 100 - (coinBasDroite[0] - coinHauteGauche[0]) * (coinBasDroite[1] - coinHauteGauche[1])*4 - (valeurjoueur.size()-1)*5;
+        eval += -100 + (coinBasDroiteAdverse[0] - coinHauteGaucheAdverse[0]) * (coinBasDroiteAdverse[1] - coinHauteGaucheAdverse[1]) + (valeuradversaire.size()-1)*10;
 
 //        Collections.sort(valeurjoueur);
 //        double maxjoueur = valeurjoueur.get(valeurjoueur.size() - 1);
