@@ -14,16 +14,6 @@ class Client {
     static int profondeur = 3;
     static int waitTurn = 0;
 
-    static int[][] coutPos = {
-            {-80, -25, -20, -20, -20, -20, -25, -80},
-            {-25, 10, 10, 10, 10, 10, 10, -25},
-            {-20, 10, 25, 25, 25, 25, 10, -20},
-            {-20, 10, 25, 50, 50, 25, 10, -20},
-            {-20, 10, 25, 50, 50, 25, 10, -20},
-            {-20, 10, 25, 25, 25, 25, 10, -20},
-            {-25, 10, 10, 10, 10, 10, 10, -25},
-            {-80, -25, -20, -20, -20, -20, -25, -80}};
-
 
     public static void main(String[] args) {
 
@@ -145,7 +135,7 @@ class Client {
                     move = console.readLine();
                     output.write(move.getBytes(), 0, move.length());
                     output.flush();
-                    break;
+
                 }
             }
         } catch (IOException e) {
@@ -199,11 +189,10 @@ class Client {
         int score = Integer.MIN_VALUE;
         long startTime = System.currentTimeMillis();
         ArrayList<String> bestCoups = new ArrayList<>();
-
-        int ancienCase, newScore;
         for (String coup : coups) {
-            ancienCase = simulerCoup(board, coup);
-            newScore = alphaBeta(copieDeBoard(board), alpha, beta, 0, true, startTime);
+            int ancienCase = simulerCoup(board, coup);
+//            afficherBoard(board);
+            int newScore = alphaBeta(copieDeBoard(board), alpha, beta, 0, true, startTime);
             annulerCoup(board, coup, ancienCase);
             if (newScore > score) {
                 score = newScore;
@@ -216,41 +205,22 @@ class Client {
         long endTime = System.currentTimeMillis();
         if (endTime - startTime > 4500) {
             profondeur--;
-            waitTurn = 1;
+            waitTurn = 3;
         } else if (endTime - startTime < 3000 && waitTurn == 0) {
             profondeur++;
         }
         if (waitTurn > 0) {
             waitTurn--;
         }
-//        System.out.println(score);
+        System.out.println(score);
 
-        if (bestCoups.size() == 0) {
-            return coups.get(0);
-        }
-
-        String bestCoup = bestCoups.remove(0);
-        if (bestCoups.size() > 0) {
-            score = -10000;
-            int scoreTemp;
-            for (String coup : bestCoups) {
-                if (System.currentTimeMillis() - startTime > 4900) {
-                    break;
-                }
-                ancienCase = simulerCoup(board, coup);
-                scoreTemp = centrage(board);
-                if (scoreTemp > score) {
-                    score = centrage(board);
-                    bestCoup = coup;
-                } else if (scoreTemp == score) {
-                    if (Math.random() > 0.5) {
-                        bestCoup = coup;
-                    }
-                }
-                annulerCoup(board, coup, ancienCase);
-            }
-        }
-        return bestCoup;
+//        String coup = coups.get((int) (Math.random() * coups.size()));
+//        if (bestCoups.size() > 0) {
+            String  coup = bestCoups.get((int) (Math.random() * bestCoups.size()));
+//        }
+//        System.out.println("Coup joué : " + coup);
+//        afficherBoard(board);
+        return coup;
     }
 
     private static int simulerCoup(int[][] board, String coup) {
@@ -278,45 +248,40 @@ class Client {
 
     //Speudo code venant de wikipedia
     private static int alphaBeta(int[][] board, int alpha, int beta, int i, boolean b, long startTime) {
-        int gagne = evaluation(board, i, false);
+        int gagne = evaluation(board);
         if (gagne == 10000 || gagne == -10000) {
             return gagne;
         } else if (i == profondeur || System.currentTimeMillis() - startTime > 4500) {
-            return evaluation(board, i, true);
+            return gagne;
         } else {
             int score;
             if (b) {
-                score = Integer.MAX_VALUE;
+                score = Integer.MIN_VALUE;
                 ArrayList<String> coups = generateAllCoups(board, numJoueurAdverse);
                 for (String coup : coups) {
                     int ancienCase = simulerCoup(board, coup);
-                    int val = alphaBeta(copieDeBoard(board), alpha, beta, i + 1, false, startTime);
+                    score = Math.max(score, alphaBeta(copieDeBoard(board), alpha, beta, i + 1, false, startTime));
                     annulerCoup(board, coup, ancienCase);
-                    if (score > val) {
-                        score = val;
-                        beta = Math.min(beta, score);
-                        if (alpha >= beta) {
-                            return score;
-                        }
+                    if (score >= beta) {
+                        return score;
                     }
+                    alpha = Math.max(alpha, score);
                 }
+                return score;
             } else {
-                score = Integer.MIN_VALUE;
+                score = Integer.MAX_VALUE;
                 ArrayList<String> coups = generateAllCoups(board, numJoueur);
                 for (String coup : coups) {
                     int ancienCase = simulerCoup(board, coup);
-                    int val = alphaBeta(copieDeBoard(board), alpha, beta, i + 1, true, startTime);
+                    score = Math.min(score, alphaBeta(copieDeBoard(board), alpha, beta, i + 1, true, startTime));
                     annulerCoup(board, coup, ancienCase);
-                    if (score < val) {
-                        score = val;
-                        alpha = Math.max(alpha, score);
-                        if (alpha >= beta) {
-                            return score;
-                        }
+                    if (alpha >= beta) {
+                        return score;
                     }
+                    beta = Math.min(beta, score);
                 }
+                return score;
             }
-            return score;
         }
     }
 
@@ -326,6 +291,7 @@ class Client {
             for (int j = 0; j < 8; j++) {
                 if (board[j][i] == joueur) {
                     coups.addAll(generateCoups(board, j, 7 - i, joueur));
+//                    System.out.println("coups : " + coups + " en  : " + alpha.charAt(j) + "" + (8 - i));
                 }
             }
         }
@@ -335,16 +301,16 @@ class Client {
 
     private static ArrayList<String> generateCoups(int[][] board, int j, int i, int joueur) {
         ArrayList<String> coups = new ArrayList<>();
-        int nbPiece;
-        for (int k = 0; k < 4; k++) {
-            nbPiece = calculeNbPieces(board, j, i, k);
+        for (int k = 0; k < 8; k++) {
+            int nbPiece = calculeNbPieces(board, j, i, k);
             coups.addAll(generateCoup(board, j, 7 - i, k, nbPiece, joueur));
-            coups.addAll(generateCoup(board, j, 7 - i, k + 4, nbPiece, joueur));
         }
         return coups;
     }
 
-    public static int evaluation(int[][] board, int deep, boolean b) {
+
+    public static int evaluation(int[][] board) {
+        int boardlocal[][] = new int[8][8];
         double eval = 0;
         ArrayList<ArrayList<int[]>> valeurjoueur = new ArrayList<>();
         ArrayList<ArrayList<int[]>> valeuradversaire = new ArrayList<>();
@@ -381,12 +347,12 @@ class Client {
         }
 
         if (valeurjoueur.size() <= 1) {
-            return 10000 - deep;
+//            System.out.println("valeuradversaire.size() <= 1");
+            return 10000;
         }
         if (valeuradversaire.size() <= 1) {
-            return -10000 + deep;
+            return -10000;
         }
-        if (!b) return 0;
 
         //calculer le nombre de piece du joueur
         int nbpiecejoueur = 0;
@@ -401,7 +367,7 @@ class Client {
 
         eval += (nbpiecejoueur - nbpiecejoueuradverse) * 10;
 
-        //cacul de la zone du joueur
+        //cacul de la zone la plus grande pour le joueur
         int[] coinHauteGauche = new int[]{7, 7};
         int[] coinBasDroite = new int[]{0, 0};
 
@@ -424,13 +390,13 @@ class Client {
             }
         }
 
-        //calcul de la zone de l'adversaire
+        //calcul de la zone la plus grande pour l'adversaire
         int[] coinHauteGaucheAdverse = new int[]{7, 7};
         int[] coinBasDroiteAdverse = new int[]{0, 0};
 
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
-                if (board[i][j] == numJoueurAdverse) {
+                if (board[i][j] != numJoueur && board[i][j] != 0) {
                     if (i < coinHauteGaucheAdverse[0]) {
                         coinHauteGaucheAdverse[0] = i;
                     }
@@ -481,28 +447,127 @@ class Client {
 
         eval += (densiteAdversaire - densiteJoueur) * 10;
 
+        int[][] pieceSquareTable8 = {
+                {-80, -25, -20, -20, -20, -20, -25, -80 },
+                {-25,  10,  10,  10,  10,  10,  10,  -25},
+                {-20,  10,  25,  25,  25,  25,  10,  -20},
+                {-20,  10,  25,  50,  50,  25,  10,  -20},
+                {-20,  10,  25,  50,  50,  25,  10,  -20},
+                {-20,  10,  25,  25,  25,  25,  10,  -20},
+                {-25,  10,  10,  10,  10,  10,  10,  -25},
+                {-80, -25, -20, -20, -20, -20, -25, -80}};
 
-        eval += centrage(board) * 2;
+        int totalScore = 0;
+
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 8; j++) {
+                if(board[i][j] == numJoueur) {
+                    totalScore += pieceSquareTable8[i][j];
+                } else if(board[i][j] == numJoueurAdverse) {
+                    totalScore -= pieceSquareTable8[i][j];
+                }
+
+
+            }
+        }
+        eval += totalScore*2;
+//
+//        eval += 100;
+//        eval -= (coinBasDroite[0] - coinHauteGauche[0]) * (coinBasDroite[1] - coinHauteGauche[1]) * (densiteMax-densite);
+//        eval -= (valeurjoueur.size() - 1) * 10;
+//
+//
+//        eval -= 100 ;
+//        eval += (coinBasDroiteAdverse[0] - coinHauteGaucheAdverse[0]) * (coinBasDroiteAdverse[1] - coinHauteGaucheAdverse[1]) * (densiteMaxAdverse-densiteAdverse);
+//        eval += (valeuradversaire.size() - 1) * 10;
+
+
+//        eval += 100 - (coinBasDroite[0] - coinHauteGauche[0]) * (coinBasDroite[1] - coinHauteGauche[1])*4 - (valeurjoueur.size()-1)*5;
+//        eval += -100 + (coinBasDroiteAdverse[0] - coinHauteGaucheAdverse[0]) * (coinBasDroiteAdverse[1] - coinHauteGaucheAdverse[1]) + (valeuradversaire.size()-1)*10;
+
+//        Collections.sort(valeurjoueur);
+//        double maxjoueur = valeurjoueur.get(valeurjoueur.size() - 1);
+
+//        Collections.sort(valeurjoueur);
+//        double maxjoueur = valeurjoueur.get(valeurjoueur.size() - 1);
+//
+//        Collections.sort(valeuradversaire);
+//        double maxadversaire = valeuradversaire.get(valeuradversaire.size() - 1);
+////        System.out.println(maxjoueur + " " + valeurjoueur.size() + " " + valeuradversaire.size());
+//
+//        if (maxjoueur > maxadversaire) {
+//            eval = ((maxjoueur) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
+//        } else if (maxadversaire > maxjoueur) {
+//            eval = ((maxadversaire) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
+//        }
+
+//        System.out.println("eval : " + eval);
+//        System.out.println("visite : " + visitejoueur.get(0)[0] + " " + visitejoueur.get(0)[1] + " " + visitejoueur.get(1)[0] + " " + visitejoueur.get(1)[1]);
+
+        //aficher valeurjoueur
+//        for (ArrayList<int[]> i : valeurjoueur) {
+//            for (int[] j : i) {
+//                System.out.print("[" + j[0] + " " + j[1] + "]");
+//            }
+//            System.out.println();
+//        }
+
+
         return (int) eval;
     }
 
-
-    //Inspiré de https://github.com/abrar-fahim/lines-of-action
-    private static int centrage(int[][] board) {
-        int score = 0;
-
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                if (board[i][j] == numJoueur) {
-                    score += coutPos[i][j];
-                } else if (board[i][j] == numJoueurAdverse) {
-                    score -= coutPos[i][j];
-                }
-            }
-        }
-
-        return score;
-    }
+//    public int evaluation(int[][] board) {
+//        int gagne = gagne(board);
+//        return score;
+//    }
+//
+//    private int gagne(int[][] board) {
+//        ArrayList<int[]> joueur = new ArrayList<>();
+//        ArrayList<int[]> adversaire = new ArrayList<>();
+//        for (int i = 0; i < 8; i++) {
+//            for (int j = 0; j < 8; j++) {
+//                if (board[i][j] == numJoueur) {
+//                    joueur.add(new int[]{i, j});
+//                } else if (board[i][j] == numJoueurAdverse) {
+//                    adversaire.add(new int[]{i, j});
+//                }
+//            }
+//        }
+//
+//        if (joueur.size() <= 1) {
+//            return 1000;
+//        } else if (adversaire.size() <= 1) {
+//            return -1000;
+//        }
+//
+//        boolean joeurAllConnected = allConnected(board, joueur, numJoueur);
+//        boolean adversaireAllConnected = allConnected(board, adversaire, numJoueurAdverse);
+//        if(joeurAllConnected){
+//            return 1000;
+//        }
+//        if(adversaireAllConnected){
+//            return -1000;
+//        }
+//        return 0;
+//    }
+//
+//    private boolean allConnected(int[][] board, ArrayList<int[]> joueur, int num) {
+//        ArrayList<int[]> visited = new ArrayList<>();
+//        ArrayList<int[]> toVisit = new ArrayList<>();
+//        int[][] deplacement = new int[][]{{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}};
+//        toVisit.add(joueur.get(0));
+//        while (toVisit.size() > 0) {
+//            int[] pos = toVisit.remove(0);
+//            visited.add(pos);
+//            for (int i = 0; i < 8; i++) {
+//                int[] newPos = new int[]{pos[0] + deplacement[i][0], pos[1] + deplacement[i][1]};
+//                if (newPos[0] >= 0 && newPos[0] < 8 && newPos[1] >= 0 && newPos[1] < 8 && board[newPos[0]][newPos[1]] == num && !visited.contains(newPos)) {
+//                    toVisit.add(newPos);
+//                }
+//            }
+//        }
+//        return visited.size() == joueur.size();
+//    }
 
     private static boolean contiens(ArrayList<int[]> visitejoueur, int[] i) {
         for (int[] ints : visitejoueur) {
@@ -653,21 +718,24 @@ class Client {
     private static int calculeNbPieces(int[][] board, int j, int i, int k) {
         int nbPiece = 0, x, y;
         switch (k) {
-            case 0: //OUEST et EST
+            case 0:
+            case 4:
                 for (int l = 0; l < 8; l++) {
                     if (board[l][7 - i] != 0) {
                         nbPiece++;
                     }
                 }
                 break;
-            case 1: //SUD et NORD
+            case 1:
+            case 5:
                 for (int l = 0; l < 8; l++) {
                     if (board[j][l] != 0) {
                         nbPiece++;
                     }
                 }
                 break;
-            case 2: //SUD-OUEST et NORD-EST
+            case 2:
+            case 6:
                 x = j;
                 y = i;
                 while (x >= 0 && y >= 0) {
@@ -688,7 +756,8 @@ class Client {
                 }
                 break;
 
-            case 3: //NORD-OUEST et SUD-EST
+            case 3:
+            case 7:
                 x = j;
                 y = i;
                 while (x < 8 && y >= 0) {
@@ -710,6 +779,19 @@ class Client {
                 break;
         }
         return nbPiece;
+    }
+
+    public static void afficherBoard(int[][] board) {
+        System.out.println("-------------------");
+        for (int i = 0; i < 8; i++) {
+            System.out.print(8 - i + " | ");
+            for (int j = 0; j < 8; j++) {
+                System.out.print(board[j][i] + " ");
+            }
+            System.out.println();
+        }
+        System.out.println("-------------------");
+        System.out.println("    A B C D E F G H");
     }
 
 }

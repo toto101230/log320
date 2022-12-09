@@ -1,0 +1,182 @@
+
+    public static int evaluation(int[][] board) {
+        int boardlocal[][] = new int[8][8];
+        double eval = 0;
+        ArrayList<ArrayList<int[]>> valeurjoueur = new ArrayList<>();
+        ArrayList<ArrayList<int[]>> valeuradversaire = new ArrayList<>();
+
+        ArrayList<int[]> joueur = new ArrayList<>();
+        ArrayList<int[]> joueuradverse = new ArrayList<>();
+
+        ArrayList<int[]> visitejoueur = new ArrayList<>(); //noeud deja visite par joueur
+        ArrayList<int[]> visitejoueuradverse = new ArrayList<>(); //noeud deja visite par joueur adverse
+
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] != 0) {
+                    if (board[i][j] == numJoueur) {
+                        joueur.add(new int[]{i, j});
+                    }
+                    if (board[i][j] != numJoueur) {
+                        joueuradverse.add(new int[]{i, j});
+                    }
+                }
+
+            }
+        }
+        for (int[] i : joueur) {
+            if (!contiens(visitejoueur, i)) {
+                valeurjoueur.add(trouvergroupe(i, joueur, visitejoueur));
+            }
+        }
+
+        for (int[] i : joueuradverse) {
+            if (!contiens(visitejoueuradverse, i)) {
+                valeuradversaire.add(trouvergroupe(i, joueuradverse, visitejoueuradverse));
+            }
+        }
+
+        if (valeurjoueur.size() <= 1) {
+            System.out.println("valeuradversaire.size() <= 1");
+            return 1000;
+        }
+        if (valeuradversaire.size() <= 1) {
+            return -1000;
+        }
+
+//        //calculer le nombre de piece du joueur
+//        int nbpiecejoueur = 0;
+//        for (ArrayList<int[]> i : valeurjoueur) {
+//            nbpiecejoueur += i.size();
+//        }
+//        //calculer le nombre de piece du joueur adverse
+//        int nbpiecejoueuradverse = 0;
+//        for (ArrayList<int[]> i : valeuradversaire) {
+//            nbpiecejoueuradverse += i.size();
+//        }
+//
+//        eval += (nbpiecejoueuradverse - nbpiecejoueur) * 10;
+
+        //cacul de la zone la plus grande pour le joueur
+        int[] coinHauteGauche = new int[]{7, 7};
+        int[] coinBasDroite = new int[]{0, 0};
+
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] == numJoueur) {
+                    if (i < coinHauteGauche[0]) {
+                        coinHauteGauche[0] = i;
+                    }
+                    if (j < coinHauteGauche[1]) {
+                        coinHauteGauche[1] = j;
+                    }
+                    if (i > coinBasDroite[0]) {
+                        coinBasDroite[0] = i;
+                    }
+                    if (j > coinBasDroite[1]) {
+                        coinBasDroite[1] = j;
+                    }
+                }
+            }
+        }
+
+        //calcul de la zone la plus grande pour l'adversaire
+        int[] coinHauteGaucheAdverse = new int[]{7, 7};
+        int[] coinBasDroiteAdverse = new int[]{0, 0};
+
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] != numJoueur && board[i][j] != 0) {
+                    if (i < coinHauteGaucheAdverse[0]) {
+                        coinHauteGaucheAdverse[0] = i;
+                    }
+                    if (j < coinHauteGaucheAdverse[1]) {
+                        coinHauteGaucheAdverse[1] = j;
+                    }
+                    if (i > coinBasDroiteAdverse[0]) {
+                        coinBasDroiteAdverse[0] = i;
+                    }
+                    if (j > coinBasDroiteAdverse[1]) {
+                        coinBasDroiteAdverse[1] = j;
+                    }
+                }
+            }
+        }
+
+//        int areaJoueur = (coinBasDroite[0] - coinHauteGauche[0]) * (coinBasDroite[1] - coinHauteGauche[1]);
+//        int areaAdversaire = (coinBasDroiteAdverse[0] - coinHauteGaucheAdverse[0]) * (coinBasDroiteAdverse[1] - coinHauteGaucheAdverse[1]);
+//
+//        eval += (areaAdversaire - areaJoueur) * 100;
+//
+        //calcul de la densité de la zone du joueur
+//        double densite = 0;
+//        double densiteMax = 0;
+//        for (int i = coinHauteGauche[0]; i <= coinBasDroite[0]; i++) {
+//            for (int j = coinHauteGauche[1]; j <= coinBasDroite[1]; j++) {
+//                if (board[i][j] == numJoueur) {
+//                    densite++;
+//                }
+//                densiteMax++;
+//            }
+//        }
+//
+//        //calcul de la densité de la zone de l'adversaire
+//        double densiteAdverse = 0;
+//        double densiteMaxAdverse = 0;
+//        for (int i = coinHauteGaucheAdverse[0]; i <= coinBasDroiteAdverse[0]; i++) {
+//            for (int j = coinHauteGaucheAdverse[1]; j <= coinBasDroiteAdverse[1]; j++) {
+//                if (board[i][j] == numJoueurAdverse) {
+//                    densiteAdverse++;
+//                }
+//                densiteMaxAdverse++;
+//            }
+//        }
+//
+//        int densiteJoueur = (int) (densite / densiteMax * 100);
+//        int densiteAdversaire = (int) (densiteAdverse / densiteMaxAdverse * 100);
+//
+//        eval += (densiteAdversaire - densiteJoueur) * 10;
+//
+//        eval += 100;
+//        eval -= (coinBasDroite[0] - coinHauteGauche[0]) * (coinBasDroite[1] - coinHauteGauche[1]) * (densiteMax-densite);
+//        eval -= (valeurjoueur.size() - 1) * 10;
+//
+//
+//        eval -= 100 ;
+//        eval += (coinBasDroiteAdverse[0] - coinHauteGaucheAdverse[0]) * (coinBasDroiteAdverse[1] - coinHauteGaucheAdverse[1]) * (densiteMaxAdverse-densiteAdverse);
+//        eval += (valeuradversaire.size() - 1) * 10;
+
+
+        eval += 100 - (coinBasDroite[0] - coinHauteGauche[0]) * (coinBasDroite[1] - coinHauteGauche[1])*4 - (valeurjoueur.size()-1)*5;
+        eval += -100 + (coinBasDroiteAdverse[0] - coinHauteGaucheAdverse[0]) * (coinBasDroiteAdverse[1] - coinHauteGaucheAdverse[1]) + (valeuradversaire.size()-1)*10;
+
+//        Collections.sort(valeurjoueur);
+//        double maxjoueur = valeurjoueur.get(valeurjoueur.size() - 1);
+
+//        Collections.sort(valeurjoueur);
+//        double maxjoueur = valeurjoueur.get(valeurjoueur.size() - 1);
+//
+//        Collections.sort(valeuradversaire);
+//        double maxadversaire = valeuradversaire.get(valeuradversaire.size() - 1);
+////        System.out.println(maxjoueur + " " + valeurjoueur.size() + " " + valeuradversaire.size());
+//
+//        if (maxjoueur > maxadversaire) {
+//            eval = ((maxjoueur) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
+//        } else if (maxadversaire > maxjoueur) {
+//            eval = ((maxadversaire) / (valeurjoueur.size() + valeuradversaire.size())) * 100;
+//        }
+
+//        System.out.println("eval : " + eval);
+//        System.out.println("visite : " + visitejoueur.get(0)[0] + " " + visitejoueur.get(0)[1] + " " + visitejoueur.get(1)[0] + " " + visitejoueur.get(1)[1]);
+
+        //aficher valeurjoueur
+//        for (ArrayList<int[]> i : valeurjoueur) {
+//            for (int[] j : i) {
+//                System.out.print("[" + j[0] + " " + j[1] + "]");
+//            }
+//            System.out.println();
+//        }
+
+
+        return (int) eval;
+    }
