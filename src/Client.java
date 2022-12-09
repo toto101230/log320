@@ -32,6 +32,8 @@ class Client {
             System.exit(1);
         }
 
+        System.out.println(args[0]);
+
         Socket myClient;
         BufferedInputStream input;
         BufferedOutputStream output;
@@ -225,7 +227,7 @@ class Client {
         }
 //        System.out.println(score);
 
-        if (bestCoups.size() == 0) {
+        if(bestCoups.size() == 0){
             return coups.get(0);
         }
 
@@ -238,9 +240,9 @@ class Client {
                     break;
                 }
                 ancienCase = simulerCoup(board, coup);
-                scoreTemp = centrage(board);
+                scoreTemp = pieceSquare(board);
                 if (scoreTemp > score) {
-                    score = centrage(board);
+                    score = scoreTemp;
                     bestCoup = coup;
                 } else if (scoreTemp == score) {
                     if (Math.random() > 0.5) {
@@ -401,7 +403,7 @@ class Client {
 
         eval += (nbpiecejoueur - nbpiecejoueuradverse) * 10;
 
-        //cacul de la zone du joueur
+        //cacul de la zone la plus grande pour le joueur
         int[] coinHauteGauche = new int[]{7, 7};
         int[] coinBasDroite = new int[]{0, 0};
 
@@ -424,7 +426,7 @@ class Client {
             }
         }
 
-        //calcul de la zone de l'adversaire
+        //calcul de la zone la plus grande pour l'adversaire
         int[] coinHauteGaucheAdverse = new int[]{7, 7};
         int[] coinBasDroiteAdverse = new int[]{0, 0};
 
@@ -451,7 +453,7 @@ class Client {
         int areaAdversaire = (coinBasDroiteAdverse[0] - coinHauteGaucheAdverse[0]) * (coinBasDroiteAdverse[1] - coinHauteGaucheAdverse[1]);
 
         eval += (areaAdversaire - areaJoueur) * 10;
-//
+
         // calcul de la densité de la zone du joueur
         double densite = 0;
         double densiteMax = 0;
@@ -482,26 +484,25 @@ class Client {
         eval += (densiteAdversaire - densiteJoueur) * 10;
 
 
-        eval += centrage(board) * 2;
+        eval += pieceSquare(board) * 2;
         return (int) eval;
     }
 
-
     //Inspiré de https://github.com/abrar-fahim/lines-of-action
-    private static int centrage(int[][] board) {
-        int score = 0;
+    private static int pieceSquare(int[][] board) {
+        int totalScore = 0;
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 if (board[i][j] == numJoueur) {
-                    score += coutPos[i][j];
+                    totalScore += coutPos[i][j];
                 } else if (board[i][j] == numJoueurAdverse) {
-                    score -= coutPos[i][j];
+                    totalScore -= coutPos[i][j];
                 }
             }
         }
 
-        return score;
+        return totalScore;
     }
 
     private static boolean contiens(ArrayList<int[]> visitejoueur, int[] i) {
